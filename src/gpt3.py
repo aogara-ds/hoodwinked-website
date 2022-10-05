@@ -14,68 +14,29 @@ class GPT3():
         return self.tokenizer(prompt)['input_ids']
     
     def generate(self, prompt, max_tokens):
+        print()
+        print("The prompt for GPT3 is")
+        print(prompt)
+        print()
+        print()
+
         response = openai.Completion.create(
             model="text-davinci-002",
             prompt=self.tokenize(prompt),
             temperature=0.6,
             max_tokens = max_tokens
         )
+        response = response['choices'][0]['text']
+        response = response.replace('\n', '')
         return response
-
-
-
-
-
-
-
-
-
-
-
-# def old_tokenize():
-#     # Initalize tokenizer and labels_tokens
-#     tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
-#     labels = ['True', 'False']
-#     labels_tokens = {label: tokenizer.encode(" " + label) for label in labels}
-#     first_token_to_label = {tokens[0]: label for label, tokens in labels_tokens.items()}
-
-# # Function for GPT3 classification query
-# def classify_gpt(text, labels):ß
-#     # POST Request
-#     response = openai.Completion.create(
-#         model="text-davinci-002",
-#         prompt=generate_prompt(animal),
-#         temperature=0.6
-#     )
-
-#     # Pull logprobs from response
-#     top_logprobs = response["completion"]["choices"][0]["logprobs"]["top_logprobs"][0]
-
-#     # Generate dict of token probabilities
-#     token_probs = {
-#         tokenizer.encode(token)[0]: np.exp(logp) 
-#         for token, logp in top_logprobs.items()
-#     }
-
-#     # Generate dict of label probabilities
-#     label_probs = {
-#         first_token_to_label[token]: prob 
-#         for token, prob in token_probs.items()
-#         if token in first_token_to_label
-#     }
-
-#     # Fill in the probability for the special "Unknown" label.
-#     if sum(label_probs.values()) < 1.0:
-#         label_probs["Unknown"] = 1.0 - sum(label_probs.values())
     
-#     return label_probs
-
-
-
-
-
-
-
-
-
-
+    def get_logprobs(self, prompt, max_tokens):
+        logprobs = openai.Completion.create(
+            model="text-davinci-002",
+            prompt=self.tokenize(prompt),
+            temperature=1.5,
+            max_tokens = max_tokens,
+            logprobs = 20
+        )
+        logprobs = logprobs['choices'][0]['logprobs']['top_logprobs'][0]
+        return logprobs

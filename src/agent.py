@@ -1,5 +1,6 @@
 import random 
 import re
+import json
 
 class Player():
     def __init__(self, name, killer, agent):
@@ -59,6 +60,15 @@ class Player():
         action_text = self.decode_action(action_prompt, action_int)
 
         return action_text
+
+    def get_cli_action(self, action_list, action_prompt):
+        print(self.story)
+        print(action_prompt)
+        print(f"Please input one of the following valid inputs: {action_list}")
+        return int(input())
+    
+    def get_random_action(self, action_list):
+        return int(random.choice(action_list))
     
     def decode_action(self, action_prompt, action_int):
         """
@@ -70,15 +80,6 @@ class Player():
         action_text = action_prompt[start_description_idx:end_description_idx].strip()
 
         return action_text
-
-    def get_cli_action(self, action_list, action_prompt):
-        print(self.story)
-        print(action_prompt)
-        print(f"Please input one of the following valid inputs: {action_list}")
-        return int(input())
-    
-    def get_random_action(self, action_list):
-        return int(random.choice(action_list))
 
     def get_statement(self, discussion_log):
         if self.agent == "random":
@@ -102,26 +103,51 @@ class Player():
             # help_prompt = "Remember, you are not the killer. If you saw somebody kill somebody else, you should tell the group."        
             # action_prompt += help_prompt
 
-        response = self.gpt3.generate(action_prompt, max_tokens = 30)
-        response = response['choices'][0]['text']
-        response = response.replace('\n', '')
+        response = self.gpt3.generate(self.story + action_prompt, max_tokens = 30)
         return response
     
-    def get_vote(self, vote_prompt, vote_list):
+    def get_vote(self, vote_prompt):
         if self.agent == "random":
-            return self.get_random_vote(vote_list)
+            vote_int = self.get_random_vote(vote_prompt)
         elif self.agent == "cli":
-            return self.get_cli_vote(vote_prompt, vote_list)
+            vote_int = self.get_cli_vote(vote_prompt)
         elif self.agent == "gpt3":
-            print("GPT3 voting not yet implemented.")
-            return self.get_random_vote(vote_list)
+            vote_int = self.get_gpt3_vote(vote_prompt)
         
-    def get_random_vote(self, vote_list):
-        return random.choice(vote_list)
+        # Return the name of the person voted for
+        vote = self.decode_vote(vote_prompt, vote_int)
+        return vote
+        
+    def get_random_vote(self, vote_prompt):
+        option_nums = re.findall("[0-9]", vote_prompt)
+        return random.choice(option_nums)
     
-    def get_cli_vote(self, vote_prompt, vote_list):
+    def get_cli_vote(self, vote_prompt):
         print(self.story)
         print(vote_prompt)
-        formatted_vote_list = ", ".join(vote_list[:-1]) + ", or " + vote_list[-1]
-        print(f'You can vote to banish {formatted_vote_list}.')
         return input()
+    
+    def get_gpt3_vote(self, vote_prompt):
+        # Get GPT3's most likely responses
+        logprobs = self.gpt3.get_logprobs(self.story + vote_prompt, max_tokens=1)
+
+        # Only accept valid integer voting options
+        option_nums = re.findall("[0-9]", vote_prompt)
+        option_probs = {num:logprobs.get(num, float('-inf')) for num in option_nums}
+        top_option = max(option_probs, key=option_probs.get)
+
+        # Return the most likely token among the valid voting options
+        return top_option
+
+    def decode_vote(self, vote_prompt, vote_int):
+        # Build a dictionary mapping vote numbers to player names
+        voting_options = dict()
+        option_nums = re.findall("[0-9]", vote_prompt)
+        for num in option_nums:
+            start_idx = vote_prompt.find(num)+3
+            end_idx = vote_prompt[start_idx:].find('\n') + start_idx
+            end_idx = len(vote_prompt) if end_idx < start_idx else end_idx
+            voting_options[num] = vote_prompt[start_idx:end_idx]
+        
+        # Return the name that was voted for
+        return voting_options[vote_int]

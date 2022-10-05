@@ -79,7 +79,7 @@ class Game():
             # Update story for killed player
             killed_player.story += self.format_turn(
                 player = killed_player,
-                turn_info = f"You were killed by {killer.name}! You lose."
+                turn_info = f"\nYou were killed by {killer.name}! You lose."
             )
 
             # Update story for killer
@@ -137,7 +137,7 @@ class Game():
             if "The door is unlocked! Escape and win the game." in a:
                 p.story += self.format_turn(
                     player = p,
-                    turn_info = "You escaped the house. You win!!!"
+                    turn_info = "\nYou escaped the house. You win!!!"
                 )
                 p.escaped = True
                 location_updates[p] = "Escaped"
@@ -153,19 +153,25 @@ class Game():
         discussion_log = self.prompts['discussion'].format(killed_player = killed_player.name)
         for _ in range(1):
             for player in self.get_active_players():
-                discussion_log += player.name + ": "
-                discussion_log += player.get_statement(discussion_log) + "\n"
+                statement_prompt = discussion_log + f"{player.name}, what would you like to say?"
+                statement = player.get_statement(statement_prompt)
+                discussion_log += player.name + ": " + statement + "\n"
+
+                # discussion_log += player.name + ": "
+                # discussion_log += player.get_statement(discussion_log) + "\n"
 
         self.print_stories()
         
         # All players vote simultaneously to banish one person
         player_votes = dict()
         vote_summary = self.prompts['vote_summary']
-        for player in self.get_active_players():
+        for player in self.get_active_players():    
             player.story += discussion_log
+            vote_options = "\n".join(str(num+1) + ". " + p.name for num, p in enumerate(self.get_active_players()))
+            vote_options += f"\nWho do you vote to banish?\n"
+            #  Please enter a number between 1 and {len(self.get_active_players())}:
             player_votes[player] = player.get_vote(
-                vote_prompt = self.prompts['vote_prompt'], 
-                vote_list = [p.name for p in self.get_active_players()]
+                vote_prompt = self.prompts['vote_prompt'] + vote_options
             )
             vote_summary += f"{player.name} voted to banish {player_votes[player]}\n"
         
@@ -183,7 +189,7 @@ class Game():
             banished_player.banished = True
             banished_player.location = "Banished"
             banished_player.story += vote_summary + \
-                "You were banished from the house. You lose."
+                "\nYou were banished from the house. You lose."
         else:
             vote_summary += f"The group did not agree on who to banish, so nobody was banished."
         
@@ -195,7 +201,7 @@ class Game():
         # Killer banished
         if self.killer_banished():
             for player in self.get_active_players():
-                player.story += "You banished the killer. You win!"
+                player.story += "\nYou banished the killer. You win!"
         
         # Killer is the last one in the house
         else:
@@ -210,6 +216,11 @@ class Game():
                     Escaped: {escaped_num}
                     Banished: {banished_num}
                     Your score for this game is {killer_score}."""
+        
+        # Print the story for any cli users
+        for player in self.players:
+            if player.agent == "cli":
+                print(player.story)
         
     def killer_banished(self):
         return self.players[self.killer_id].banished
@@ -356,9 +367,9 @@ class Game():
 
         discussion = """{killed_player} was killed! Who do you think the killer is?\n"""
 
-        vote_prompt = "Now everyone will vote to banish one player."
+        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish?\n"
 
-        vote_summary = "Here are the votes:\n"
+        vote_summary = "\nHere are the votes:\n"
 
         prompts = {
             "rules": rules,
