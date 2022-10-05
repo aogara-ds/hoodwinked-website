@@ -1,11 +1,11 @@
 import random
 from collections import Counter
 from .agent import Player
+from .gpt3 import GPT3
 
 class Game():
     def __init__(self, ):
         print("Initialized game.")
-        self.need_discussion = False
         self.prompts = self.load_prompts()
         self.location_actions = {
             'Hallway': ['Go to the Kitchen', 'Go to the Bedroom', 'Go to the Bathroom'],
@@ -21,11 +21,17 @@ class Game():
         self.players = players
         self.killer_id = [i for i, player in enumerate(self.players) if player.killer==True][0]
         self.load_stories()
+
+        # Provide access to a single GPT3 endpoint if necessary
+        gpt3_agents = [p for p in self.players if p.agent == "gpt3"]
+        if len(gpt3_agents) > 0:
+            self.gpt3 = GPT3()
+            for p in gpt3_agents:
+                p.gpt3 = self.gpt3            
     
     def play(self):
         # Play until the game ends
         while (self.killer_banished() == False) and (self.innocents_alive_in_house() > 0):
-            
             # Get actions for each player
             for player in self.get_active_players():
                 action_prompt = self.get_action_prompt(player)
@@ -33,14 +39,11 @@ class Game():
                 player.actions.append(action_text)
             
             # Update the game state
-            self.update_state()
+            killed_player = self.update_state()
 
             # Initiate discussion if necessary
-            if self.need_discussion == True and (self.innocents_alive_in_house() > 0):
-                self.discussion()
-
-                # Reset the need for a discussion
-                self.need_discussion = False
+            if killed_player != None and (self.innocents_alive_in_house() > 0):
+                self.discussion(killed_player)
         
         # When game is over, record the endgame results
         self.endgame()
@@ -59,6 +62,7 @@ class Game():
 
         # Begin by assuming no murders take place
         murder = False
+        killed_player = None
         witnesses = []
         witness_update = ""
         
@@ -70,10 +74,6 @@ class Game():
                 killed_player = [p for p in self.players if p.name == killed_player_name][0]
                 killer = p
                 murder = True
-
-                # Continue the loop and update the states afterwards
-                # This assumes there is only one killer
-                continue
         
         if murder:
             # Update story for killed player
@@ -99,9 +99,6 @@ class Game():
             # Remove killer and killed player from player_actions
             del player_actions[killed_player]
             del player_actions[killer]
-
-            # Game shifts to a discussion stage
-            self.need_discussion = True
         
         # Update stories for other players
         for p, a in player_actions.items():
@@ -148,13 +145,18 @@ class Game():
         # Update killed player's location after other players' turn updates
         for player, new_location in location_updates.items():
             player.location = new_location
+        
+        return killed_player
     
-    def discussion(self):
+    def discussion(self, killed_player):
         # Prompt each player to share a statement before the vote
-        discussion_log = self.prompts['discussion']
-        for player in self.get_active_players():
-            discussion_log += player.name + ": "
-            discussion_log += player.get_statement(discussion_log) + "\n"
+        discussion_log = self.prompts['discussion'].format(killed_player = killed_player.name)
+        for _ in range(1):
+            for player in self.get_active_players():
+                discussion_log += player.name + ": "
+                discussion_log += player.get_statement(discussion_log) + "\n"
+
+        self.print_stories()
         
         # All players vote simultaneously to banish one person
         player_votes = dict()
@@ -352,7 +354,7 @@ class Game():
         Other Players in {location}: {opponents_in_location}
         Your Action: {turn_action}\n\n{turn_info}"""
 
-        discussion = """Somebody was killed! Who do you think the killer is?\n"""
+        discussion = """{killed_player} was killed! Who do you think the killer is?\n"""
 
         vote_prompt = "Now everyone will vote to banish one player."
 

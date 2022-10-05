@@ -6,10 +6,10 @@ game = Game()
 
 # Load the players into the game
 game.load_players([
-    Player("Amy", killer=True, bot=False),
-    Player("Bob", killer=False, bot=True),
-    Player("Lena", killer=False, bot=True),
-    Player("Tim", killer=False, bot=True)
+    Player("Amy", killer=True, agent="cli"),
+    Player("Bob", killer=False, agent="gpt3"),
+    Player("Lena", killer=False, agent="gpt3"),
+    Player("Tim", killer=False, agent="gpt3")
 ])
 
 # Play the game

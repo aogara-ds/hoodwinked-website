@@ -2,13 +2,14 @@ import random
 import re
 
 class Player():
-    def __init__(self, name, killer, bot):
+    def __init__(self, name, killer, agent):
         """
         Initializes a player with the given name and identity. 
         """
         self.name = name
         self.killer = killer
-        self.bot = bot
+        self.agent = agent
+        assert agent in ["cli", "random", "gpt3"], f"Player of type {agent} is not implemented."
         self.alive = True
         self.banished = False
         self.has_key = False
@@ -16,6 +17,12 @@ class Player():
         self.location = "Hallway"
         self.story = ""
         self.actions = []
+    
+    def load_gpt3(self, gpt3):
+        """
+        Saves a reference to GPT3 provided by the Game class.
+        """
+        self.gpt3 = gpt3
     
     def get_action(self, action_prompt):
         """
@@ -33,11 +40,13 @@ class Player():
         # Get and validate action
         while valid_action == False:
             # Get action
-            if self.bot == True:
+            if self.agent == "random":
                 action_int = self.get_random_action(action_int_list)
-            else:
+            elif self.agent == "cli":
                 action_int = self.get_cli_action(action_int_list, action_prompt)
-                
+            elif self.agent == "gpt3":
+                print("GPT3 actions not implemented yet")
+                action_int = self.get_random_action(action_int_list)
 
             # Validate action
             try:
@@ -70,12 +79,14 @@ class Player():
     
     def get_random_action(self, action_list):
         return int(random.choice(action_list))
-    
+
     def get_statement(self, discussion_log):
-        if self.bot == True:
+        if self.agent == "random":
             return self.get_idk_statement()
-        else:
+        elif self.agent == "cli":
             return self.get_cli_statement(discussion_log)
+        elif self.agent == "gpt3":
+            return self.get_gpt3_statement(discussion_log)
 
     def get_idk_statement(self):
         return "I don't know who the killer is."
@@ -85,13 +96,26 @@ class Player():
         print(discussion_log)
         print("What would you like to say?")
         return input()
+
+    def get_gpt3_statement(self, action_prompt):
+        # if self.killer == False:
+            # help_prompt = "Remember, you are not the killer. If you saw somebody kill somebody else, you should tell the group."        
+            # action_prompt += help_prompt
+
+        response = self.gpt3.generate(action_prompt, max_tokens = 30)
+        response = response['choices'][0]['text']
+        response = response.replace('\n', '')
+        return response
     
     def get_vote(self, vote_prompt, vote_list):
-        if self.bot:
+        if self.agent == "random":
             return self.get_random_vote(vote_list)
-        else:
+        elif self.agent == "cli":
             return self.get_cli_vote(vote_prompt, vote_list)
-    
+        elif self.agent == "gpt3":
+            print("GPT3 voting not yet implemented.")
+            return self.get_random_vote(vote_list)
+        
     def get_random_vote(self, vote_list):
         return random.choice(vote_list)
     
