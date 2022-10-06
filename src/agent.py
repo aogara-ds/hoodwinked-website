@@ -1,6 +1,6 @@
 import random 
 import re
-import json
+import math
 
 class Player():
     def __init__(self, name, killer, agent):
@@ -46,8 +46,7 @@ class Player():
             elif self.agent == "cli":
                 action_int = self.get_cli_action(action_int_list, action_prompt)
             elif self.agent == "gpt3":
-                print("GPT3 actions not implemented yet")
-                action_int = self.get_random_action(action_int_list)
+                action_int = self.get_gpt3_action(action_prompt)
 
             # Validate action
             try:
@@ -69,6 +68,34 @@ class Player():
     
     def get_random_action(self, action_list):
         return int(random.choice(action_list))
+    
+    def get_gpt3_action(self, action_prompt, max=False):
+        # Get GPT3's most likely responses
+        logprobs = self.gpt3.get_logprobs(self.story + action_prompt, max_tokens=1)
+
+        # Only accept valid integer voting options
+        option_nums = re.findall("[0-9]", action_prompt)
+        option_probs = {num:math.exp(logprobs.get(num, float('-inf'))) for num in option_nums}
+
+        if max == True:
+            vote = max(option_probs, key=option_probs.get)
+        else:
+            # Generate a probability mass distribution for actions
+            total_prob_mass = sum(option_probs.values())
+            scaled_option_probs = {k:v / total_prob_mass for k, v in option_probs.items()}
+
+            # Sample an action from the distribution
+            rand_val = random.random()
+            total = 0
+            for k, v in sorted(scaled_option_probs.items(), key=lambda x: random.random()):
+                total += v
+                if rand_val <= total:
+                    vote = k
+                    break
+
+        # Return the most likely token among the valid voting options
+        vote = int(vote)
+        return vote
     
     def decode_action(self, action_prompt, action_int):
         """
@@ -103,7 +130,7 @@ class Player():
             # help_prompt = "Remember, you are not the killer. If you saw somebody kill somebody else, you should tell the group."        
             # action_prompt += help_prompt
 
-        response = self.gpt3.generate(self.story + action_prompt, max_tokens = 30)
+        response = self.gpt3.generate(self.story + action_prompt, max_tokens = 50)
         return response
     
     def get_vote(self, vote_prompt):

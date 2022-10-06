@@ -15,3 +15,5 @@ game.load_players([
 
 # Play the game
 game.play()
+
+# game.print_stories()

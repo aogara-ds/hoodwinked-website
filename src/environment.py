@@ -358,7 +358,7 @@ class Game():
         {possible_actions}
         
         Which action would you like to take?
-        Your Action:"""
+        Your Action:\n"""
 
         turn = """Turn #{turn_num}
         Location: {location}
