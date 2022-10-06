@@ -6,8 +6,8 @@ game = Game()
 
 # Load the players into the game
 game.load_players([
-    Player("Regan", killer=True, agent="cli"),
-    Player("Amy", killer=False, agent="gpt3"),
+    Player("Regan", killer=False, agent="cli"),
+    Player("Amy", killer=True, agent="gpt3"),
     Player("Spencer", killer=False, agent="gpt3"),
     Player("Lena", killer=False, agent="gpt3"),
     Player("Tim", killer=False, agent="gpt3")
@@ -15,5 +15,3 @@ game.load_players([
 
 # Play the game
 game.play()
-
-# game.print_stories()

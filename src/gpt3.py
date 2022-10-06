@@ -23,7 +23,7 @@ class GPT3():
         response = openai.Completion.create(
             model="text-davinci-002",
             prompt=self.tokenize(prompt),
-            temperature=1.2,
+            temperature=0.8,
             max_tokens = max_tokens
         )
         response = response['choices'][0]['text']

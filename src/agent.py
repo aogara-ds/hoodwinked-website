@@ -130,7 +130,7 @@ class Player():
             # help_prompt = "Remember, you are not the killer. If you saw somebody kill somebody else, you should tell the group."        
             # action_prompt += help_prompt
 
-        response = self.gpt3.generate(self.story + action_prompt, max_tokens = 50)
+        response = self.gpt3.generate(self.story + action_prompt, max_tokens = 24)
         return response
     
     def get_vote(self, vote_prompt):
