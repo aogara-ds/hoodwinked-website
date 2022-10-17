@@ -18,7 +18,7 @@ pip install -r requirements.txt
 Finally, you'll need to store an OpenAI API Key in a .env file, like this:
 ```
 touch .env
-echo "OPENAI_API_KEY = 'YOUR_KEY_GOES_HERE'" > .env
+echo "OPENAI_API_KEY = "YOUR_KEY_GOES_HERE" > .env
 ```
 
 Now you can play the game! Just run `python3 demo.py`. You can edit player names and roles in `demo.py`. 
