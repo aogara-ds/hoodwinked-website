@@ -106,7 +106,7 @@ class Game():
 
             # update evaluation metrics
             killed_player.eval['killed'] = True
-            killer['num_killed'] += 1
+            killer.eval['num_killed'] += 1
 
             # Remove killer and killed player from player_actions
             del player_actions[killed_player]
@@ -214,7 +214,7 @@ class Game():
             # evaluation metrics: need to keep track of how many get banished before the killer
             banished_player.eval['banished'] = True
             if banished_player.killer == False:
-                self.get_killer.eval['num_banished'] += 1
+                self.get_killer().eval['num_banished'] += 1
 
         else:
             vote_summary += f"The group did not agree on who to banish, so nobody was banished."
