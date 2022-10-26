@@ -52,7 +52,7 @@ class Game():
 
         # When game is over, record the endgame results
         self.endgame()
-        evaluation_metrics = {p: p.eval for p in self.players}
+        evaluation_metrics = [p.eval for p in self.players]
         return evaluation_metrics
 
     def update_state(self):
