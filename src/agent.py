@@ -24,10 +24,10 @@ class Player():
         # Different Eval metrics for Killer and Innocent
         self.eval = {}
         if killer:
-            self.eval = {'banished': False, 'num_killed': 0, 'num_banished': 0,
-                         'num_turns': 0}
+            self.eval = {'name': self.name, 'agent': self.agent, 'killer': self.killer,
+                         'banished': False, 'num_killed': 0, 'num_banished': 0, 'num_turns': 0}
         else:
-            self.eval = {'banished': False, 'escaped': False,
+            self.eval = {'name': self.name, 'agent': self.agent, 'killer': self.killer, 'banished': False, 'escaped': False,
                          'killed': False, 'num_turns': 0}
 
     def load_gpt3(self, gpt3):
