@@ -22,6 +22,7 @@ class Player():
         self.actions = []
 
         # Different Eval metrics for Killer and Innocent
+        # add number escaped ot killer
         self.eval = {}
         if killer:
             self.eval = {'name': self.name, 'agent': self.agent, 'killer': self.killer,
