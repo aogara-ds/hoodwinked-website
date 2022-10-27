@@ -54,6 +54,39 @@ for game_num in range(20):
 
     # Load the players into the game
     game.load_players([
+        Player("Regan", killer=False, agent="random"),
+        Player("Amy", killer=True, agent="gpt3"),
+        Player("Spencer", killer=False, agent="random"),
+        Player("Lena", killer=False, agent="random"),
+        Player("Tim", killer=False, agent="random"),
+        Player("Bob", killer=False, agent="random")
+    ])
+    # Play the game
+    player_dicts = game.play()
+    end_time = time.time()
+
+    # Store player results
+    eval_df = eval_df.append(player_dicts, ignore_index=True)
+
+    # Store game-level information
+    game_idxs = eval_df.loc[eval_df.shape[0]-len(game.players):
+                            eval_df.shape[0]-1].index
+    eval_df.loc[game_idxs, "Setup"] = "gpt_killer_remaining_random"
+    eval_df.loc[game_idxs, "Game Number"] = game_num
+    eval_df.loc[game_idxs, "Runtime"] = end_time - start_time
+    eval_df.loc[game_idxs, "Number of Players"] = len(game.players)
+    eval_df.loc[game_idxs, "Discussion"] = discussion
+
+# Run a number of games
+for game_num in range(20):
+    # Time the game
+    start_time = time.time()
+
+    # Define the game
+    game = Game(discussion=False)
+
+    # Load the players into the game
+    game.load_players([
         Player("Regan", killer=False, agent="gpt3"),
         Player("Amy", killer=True, agent="gpt3"),
         Player("Spencer", killer=False, agent="gpt3"),

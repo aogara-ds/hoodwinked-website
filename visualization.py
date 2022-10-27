@@ -6,15 +6,13 @@ import numpy as np
 
 # Load CSV from Results directory
 save_dir = 'results'
-file_name = '2'
+file_name = '3'
 full_path = save_dir + '/' + file_name + '.csv'
 
 print(full_path)
 eval_df = pd.read_csv(full_path, index_col=0)
 
-print(eval_df)
-
-setups = ["all_random", "all_gpt"]
+setups = ["all_random", "all_gpt", "gpt_killer_remaining_random"]
 
 
 # Calculate metrics for evaluation
@@ -60,6 +58,6 @@ print(innocents_summary)
 labels = innocents_summary.columns
 
 innocents_summary.plot(x=labels[0], y=labels[1:], kind="bar")
-
+plt.xticks(rotation=0)
 # innocents_summary.plot(x=innocents_summary.columns, y=innocents_summary)
 plt.show()
