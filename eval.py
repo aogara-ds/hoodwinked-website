@@ -15,6 +15,8 @@ for game_num in range(20):
     # Time the game
     start_time = time.time()
 
+# look into doing this dataframe style
+
     # Define the game
     game = Game(discussion=False)
 
@@ -29,7 +31,7 @@ for game_num in range(20):
     ])
 
     # Play the game
-    player_dicts = game.play()    
+    player_dicts = game.play()
     end_time = time.time()
 
     # Store player results
@@ -44,7 +46,7 @@ for game_num in range(20):
 
 # Save results as CSV
 save_dir = 'results'
-file_name = str(len([name for name in os.listdir(save_dir) 
+file_name = str(len([name for name in os.listdir(save_dir)
                 if os.path.isfile(os.path.join(save_dir, name))]))
 full_path = save_dir + '/' + file_name + '.csv'
 eval_df.to_csv(full_path)
