@@ -15,11 +15,6 @@ class GPT3():
         return self.tokenizer(prompt)['input_ids']
 
     def generate(self, prompt, max_tokens):
-        print()
-        print("The prompt for GPT3 is")
-        print(prompt)
-        print()
-        print()
 
         response = openai.Completion.create(
             model="text-davinci-002",

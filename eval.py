@@ -1,20 +1,22 @@
-# import agent and game
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 from src.agent import Player
 from src.environment import Game
 import time
 import pandas as pd
 import os
 
-# store results in dataframe
+# Prepare DataFrame to store results
 columns = ['Game Number', 'Runtime', 'Number of Players']
 eval_df = pd.DataFrame(columns=columns)
 
+# Run a number of games
 for game_num in range(20):
     # Time the game
     start_time = time.time()
 
     # Define the game
-    game = Game()
+    game = Game(discussion=False)
 
     # Load the players into the game
     game.load_players([
