@@ -13,8 +13,6 @@ for game_num in range(20):
     # Time the game
     start_time = time.time()
 
-# look into doing this dataframe style
-
     # Define the game
     game = Game()
 
