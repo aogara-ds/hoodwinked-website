@@ -1,10 +1,10 @@
+import os
+import pandas as pd
+import time
+from src.environment import Game
+from src.agent import Player
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-from src.agent import Player
-from src.environment import Game
-import time
-import pandas as pd
-import os
 
 # Prepare DataFrame to store results
 columns = ['Game Number', 'Runtime', 'Number of Players', 'Discussion']
@@ -45,6 +45,7 @@ for game_num in range(20):
     eval_df.loc[game_idxs, "Discussion"] = discussion
 
 
+print(eval_df)
 # Save results as CSV
 save_dir = 'results'
 file_name = str(len([name for name in os.listdir(save_dir)
