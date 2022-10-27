@@ -49,7 +49,7 @@ class GPT3():
     def trim_prompt(self, prompt):
         # While the prompt is too long, delete turns
         delete_turn_num = 0
-        while len(self.tokenize(prompt) > 1024 - self.max_tokens):
+        while len(self.tokenize(prompt)) > (1024 - self.max_tokens):
             # Identify the beginning and end position of the target turn
             delete_turn_num += 1
             start_pos = prompt.find(f"Turn #{delete_turn_num}")
