@@ -5,7 +5,7 @@ from .gpt3 import GPT3
 
 
 class Game():
-    def __init__(self, discussion = True):
+    def __init__(self, discussion=True):
         print("Initialized game.")
         self.discussion = discussion
         self.prompts = self.load_prompts()
@@ -179,7 +179,7 @@ class Game():
                     f"{player.name}, what would you like to say?"
                 statement = player.get_statement(statement_prompt)
                 discussion_log += player.name + ": " + statement + "\n"
- 
+
             for player in self.get_active_players():
                 player.story += discussion_log
 
