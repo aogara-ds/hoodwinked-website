@@ -8,7 +8,7 @@ num_games = 20
 
 # look into doing this dataframe style
 
-for x in range(2):
+for x in range(1):
     # Define the game
     game = Game()
 
@@ -16,13 +16,15 @@ for x in range(2):
     game.load_players([
         Player("Regan", killer=False, agent="random"),
         Player("Amy", killer=True, agent="random"),
-        Player("Spencer", killer=False, agent="gpt3"),
-        Player("Lena", killer=False, agent="gpt3"),
-        Player("Tim", killer=False, agent="gpt3")
+        Player("Spencer", killer=False, agent="random"),
+        Player("Lena", killer=False, agent="random"),
+        Player("Tim", killer=False, agent="random")
     ])
 
     # Play the game
-    results.append(game.play())
+    game_result = game.play()
+    results.append(game_result)
+    print(game_result)
 
 print(results)
 
