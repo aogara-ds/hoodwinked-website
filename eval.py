@@ -7,7 +7,8 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Prepare DataFrame to store results
-columns = ['Game Number', 'Runtime', 'Number of Players', 'Discussion']
+columns = ['Game Number', "Setup", 'Runtime',
+           'Number of Players', 'Discussion']
 eval_df = pd.DataFrame(columns=columns)
 
 # Run a number of games
