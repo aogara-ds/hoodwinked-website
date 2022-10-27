@@ -7,7 +7,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Prepare DataFrame to store results
-columns = ['Game Number', 'Setup', 'Runtime', 'Number of Players']
+columns = ['Game Number', 'Runtime', 'Number of Players', 'Discussion']
 eval_df = pd.DataFrame(columns=columns)
 
 # Run a number of games
@@ -16,7 +16,8 @@ for game_num in range(20):
     start_time = time.time()
 
     # Define the game
-    game = Game(discussion=False)
+    discussion = False
+    game = Game(discussion=discussion)
 
     # Load the players into the game
     game.load_players([
@@ -73,6 +74,8 @@ for game_num in range(20):
     eval_df.loc[game_idxs, "Game Number"] = game_num
     eval_df.loc[game_idxs, "Runtime"] = end_time - start_time
     eval_df.loc[game_idxs, "Number of Players"] = len(game.players)
+    eval_df.loc[game_idxs, "Discussion"] = discussion
+
 
 # Save results as CSV
 save_dir = 'results'
