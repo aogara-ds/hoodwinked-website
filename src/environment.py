@@ -5,8 +5,9 @@ from .gpt3 import GPT3
 
 
 class Game():
-    def __init__(self, ):
+    def __init__(self, discussion = True):
         print("Initialized game.")
+        self.discussion = discussion
         self.prompts = self.load_prompts()
         self.location_actions = {
             'Hallway': ['Go to the Kitchen', 'Go to the Bedroom', 'Go to the Bathroom'],
@@ -46,9 +47,14 @@ class Game():
             # Update the game state
             killed_player = self.update_state()
 
-            # Initiate discussion if necessary
+            # Procedure if a player is killed
             if killed_player != None and (self.innocents_alive_in_house() > 0):
-                self.discussion(killed_player)
+                # Discuss if game settings include discussion
+                if self.discussion:
+                    self.discuss(killed_player)
+
+                # With or without discussion, vote to banish one player
+                self.vote(killed_player)
 
         # When game is over, record the endgame results
         self.endgame()
@@ -163,27 +169,25 @@ class Game():
 
         return killed_player
 
-    def discussion(self, killed_player):
+    def discuss(self, killed_player, discussion_steps=1):
         # Prompt each player to share a statement before the vote
         discussion_log = self.prompts['discussion'].format(
             killed_player=killed_player.name)
-        for _ in range(1):
+        for _ in range(discussion_steps):
             for player in self.get_active_players():
                 statement_prompt = discussion_log + \
                     f"{player.name}, what would you like to say?"
                 statement = player.get_statement(statement_prompt)
                 discussion_log += player.name + ": " + statement + "\n"
+ 
+            for player in self.get_active_players():
+                player.story += discussion_log
 
-                # discussion_log += player.name + ": "
-                # discussion_log += player.get_statement(discussion_log) + "\n"
-
-        self.print_stories()
-
+    def vote(self, killed_player):
         # All players vote simultaneously to banish one person
         player_votes = dict()
         vote_summary = self.prompts['vote_summary']
         for player in self.get_active_players():
-            player.story += discussion_log
             vote_options = "\n".join(
                 str(num+1) + ". " + p.name for num, p in enumerate(self.get_active_players()))
             vote_options += f"\nWho do you vote to banish?\n"
