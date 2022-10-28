@@ -6,13 +6,15 @@ import numpy as np
 
 # Load CSV from Results directory
 save_dir = 'results'
-file_name = '3'
+file_name = 'gpt3_results'
 full_path = save_dir + '/' + file_name + '.csv'
 
 print(full_path)
 eval_df = pd.read_csv(full_path, index_col=0)
 
-setups = ["all_random", "all_gpt", "gpt_killer_remaining_random"]
+setups = ["Discussion", "No Discussion"]
+
+print(eval_df)
 
 
 # Calculate metrics for evaluation
@@ -21,6 +23,9 @@ total_killers = np.array([eval_df.loc[(
 total_agents = np.array(
     [len(eval_df[eval_df["Setup"] == setup]) for setup in setups])
 total_innocent = np.subtract(total_agents, total_killers)
+
+print("Total agents:")
+print(total_agents)
 
 # Sanity Check that calculations are correct
 # print(total_killers)
@@ -40,6 +45,9 @@ total_innocent_killed = np.array([len(
 total_innocent_banished = np.array([len(
     eval_df[(eval_df['killer'] == False) & (eval_df['banished'] == True) & (eval_df['Setup'] == setup)]) for setup in setups])
 
+print(f"Total innocent escaped: {total_innocent_escaped}")
+print(f"Total innocent banished: {total_innocent_banished}")
+
 # PLOTS
 innocents_summary = pd.DataFrame(
     columns=["Setup", "Escaped (%)", "Banished Killer (%)", "Killed (%)", "Banished (%)"])
@@ -57,7 +65,7 @@ innocents_summary["Banished (%)"] = total_innocent_banished / \
 print(innocents_summary)
 labels = innocents_summary.columns
 
-innocents_summary.plot(x=labels[0], y=labels[1:], kind="bar")
+innocents_summary.plot(x=labels[0], y=labels[1:], kind="bar", title="Outcomes for Innocent Players")
 plt.xticks(rotation=0)
 # innocents_summary.plot(x=innocents_summary.columns, y=innocents_summary)
 plt.show()

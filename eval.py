@@ -23,12 +23,13 @@ eval_df = pd.DataFrame(columns=columns)
 save_path = get_save_path()
 
 # Run a number of games
-for game_num in range(20):
+for game_num in range(1000):
     # Time the game
     start_time = time.time()
 
     # Define the game
-    game = Game(discussion=False)
+    discussion = (game_num % 2 == 0)
+    game = Game(discussion=discussion)
 
     # Load the players into the game
     game.load_players([
@@ -49,15 +50,15 @@ for game_num in range(20):
     # Store game-level information
     game_idxs = eval_df.loc[eval_df.shape[0]-len(game.players):
                             eval_df.shape[0]-1].index
-    eval_df.loc[game_idxs, "Setup"] = "all_gpt"
     eval_df.loc[game_idxs, "Game Number"] = game_num
+    eval_df.loc[game_idxs, "Setup"] = "all_gpt"
     eval_df.loc[game_idxs, "Runtime"] = end_time - start_time
     eval_df.loc[game_idxs, "Number of Players"] = len(game.players)
     eval_df.loc[game_idxs, "Discussion"] = discussion
 
     # Save results every 50 games
-    if game_num % 50 == 0:
-        print(f"Saving first {x} games")
+    if game_num % 20 == 0:
+        print(f"Saving first {game_num} games")
         eval_df.to_csv(save_path)
 
 # Save results as CSV
