@@ -168,9 +168,15 @@ class Game():
                 location_updates[p] = a[10:]
 
             if "Search" in a:
-                # Check if the key was found
+                # Search location is at the end of the action
                 search_location = a[11:]
-                if self.key_location == search_location:
+
+                # The killer cannot search for the key
+                if p.killer == True:
+                    search_update = f"You're the killer! You cannot search for the key. You must kill the other players.\n\n"
+
+                # Check if the key was found
+                elif self.key_location == search_location:
                     search_update = f"You found the key in the {search_location}! Find the door and escape to win the game.\n\n"
                     p.has_key = True
                 else:
@@ -215,9 +221,9 @@ class Game():
         stop_tokens = [p.name + ":" for p in self.get_active_players()]
         for _ in range(discussion_steps):
             for player in self.get_active_players():
-                discussion_log += {player.name} + ":"
+                discussion_log += str(player.name) + ": "
                 statement = player.get_statement(discussion_log, stop_tokens)
-                discussion_log += "\n"
+                discussion_log += statement + "\n"
  
             for player in self.get_active_players():
                 player.story += discussion_log
@@ -289,10 +295,12 @@ class Game():
                     Your score for this game is {killer_score}."""
 
         for player in self.players:
-            # Save story in evaluation metrics
-            player.eval['story'] = player.story
-            player.eval['actions'] = player.actions
-            player.eval['votes'] = player.votes
+            player.finalize_eval(
+                killer_name = self.get_killer().name
+            )
+
+            print()
+            print({k:v for k,v in player.eval.items() if k!='story'})
 
             # Print the story for any cli users
             if player.agent == "cli":
