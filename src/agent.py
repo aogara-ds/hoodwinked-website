@@ -104,10 +104,7 @@ class Player():
                 print("Invalid action. Please try again.")
 
         action_text = self.decode_action(action_prompt, action_int)
-
-        # Log action
-        self.actions.append(action_text)
-
+        
         return action_text
 
     def get_cli_action(self, action_list, action_prompt):

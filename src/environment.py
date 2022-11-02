@@ -74,9 +74,9 @@ class Game():
             for player in self.get_active_players():
                 action_prompt = self.get_action_prompt(player)
                 action_text = player.get_action(action_prompt)
-                player.actions.append(action_text)
 
                 # update evaluation metrics
+                player.actions.append(action_text)
                 player.eval['num_turns'] += 1
 
             # Update the game state
@@ -268,7 +268,7 @@ class Game():
                 self.get_killer().eval['num_banished'] += 1
 
         else:
-            vote_summary += f"The group did not agree on who to banish, so nobody was banished."
+            vote_summary += f"The group did not agree on who to banish, so nobody was banished.\n\n"
 
         # Record the vote summary
         for player in self.get_active_players():
