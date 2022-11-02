@@ -2,10 +2,11 @@ import random
 from collections import Counter
 from .agent import Player
 from .gpt3 import GPT3
+import random
 
 
 class Game():
-    def __init__(self, discussion=True):
+    def __init__(self, discussion = True, start_location = "random"):
         print("Initialized game.")
         self.discussion = discussion
         self.prompts = self.load_prompts()
@@ -18,8 +19,12 @@ class Game():
         self.door_unlocked = False
         self.key_location = random.choice([a[11:] for a_list in self.location_actions.values()
                                            for a in a_list if "Search" in a])
+        self.start_location = start_location
 
     def load_players(self, players):
+        """
+        Loads specific players with defined names and identities
+        """
         self.players = players
         self.killer_id = [i for i, player in enumerate(
             self.players) if player.killer == True][0]
@@ -31,6 +36,36 @@ class Game():
             self.gpt3 = GPT3()
             for p in gpt3_agents:
                 p.gpt3 = self.gpt3
+
+    def load_random_players(self, num_players, impostor_agent, innocent_agent):
+        """
+        Loads players with randomly selected names and identities. 
+        """
+        # Randomize player names and killer's identity
+        names = ["Bob", "Sally", "Tim", "Lena", "Bryce", "Regan"]
+        player_names = random.sample(names, num_players)
+        killer_idx = random.choice([i for i in range(num_players)])
+
+        # Generate list of Player objects
+        players = list()
+        for i in range(num_players):
+            if i == killer_idx:
+                players.append(Player(
+                    name=player_names[i],
+                    killer=True,
+                    agent=impostor_agent,
+                    start_location = self.start_location
+                ))
+            else:
+                 players.append(Player(
+                    name=player_names[i],
+                    killer=False,
+                    agent=innocent_agent,
+                    start_location = self.start_location
+                ))               
+
+        # Finish loading players into the game with standard function
+        self.load_players(players)
 
     def play(self):
         # Play until the game ends
@@ -54,7 +89,7 @@ class Game():
                     self.discuss(killed_player)
 
                 # With or without discussion, vote to banish one player
-                self.vote(killed_player)
+                self.vote()
 
         # When game is over, record the endgame results
         self.endgame()
@@ -105,6 +140,8 @@ class Game():
             # Prepare to update story for other players
             witness_update = f"You saw {killer.name} kill {killed_player.name} in the {killer.location}!\n\n"
             witnesses = self.get_opponents_in_location(p)
+            for player in witnesses:
+                player.witness = True
 
             # Update their game state
             killed_player.alive = False
@@ -173,17 +210,21 @@ class Game():
         # Prompt each player to share a statement before the vote
         discussion_log = self.prompts['discussion'].format(
             killed_player=killed_player.name)
+        
+        # Don't allow players to predict each other's dialogue
+        stop_tokens = [p.name + ":" for p in self.get_active_players()]
         for _ in range(discussion_steps):
             for player in self.get_active_players():
-                statement_prompt = discussion_log + \
-                    f"{player.name}, what would you like to say?"
-                statement = player.get_statement(statement_prompt)
-                discussion_log += player.name + ": " + statement + "\n"
-
+                discussion_log += {player.name} + ":"
+                statement = player.get_statement(discussion_log, stop_tokens)
+                discussion_log += "\n"
+ 
             for player in self.get_active_players():
                 player.story += discussion_log
+            
+            print(discussion_log)
 
-    def vote(self, killed_player):
+    def vote(self):
         # All players vote simultaneously to banish one person
         player_votes = dict()
         vote_summary = self.prompts['vote_summary']
@@ -247,8 +288,13 @@ class Game():
                     Banished: {banished_num}
                     Your score for this game is {killer_score}."""
 
-        # Print the story for any cli users
         for player in self.players:
+            # Save story in evaluation metrics
+            player.eval['story'] = player.story
+            player.eval['actions'] = player.actions
+            player.eval['votes'] = player.votes
+
+            # Print the story for any cli users
             if player.agent == "cli":
                 print(player.story)
 
