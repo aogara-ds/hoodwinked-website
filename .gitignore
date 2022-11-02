@@ -131,4 +131,5 @@ dmypy.json
 # Custom
 notes.txt
 results/
+jobs/
 .DS_Store
