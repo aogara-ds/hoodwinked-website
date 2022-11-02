@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from transformers import GPT2Tokenizer
 from transformers.utils import logging
+import time
 
 class GPT3():
     def __init__(self, max_tokens = 16, temperature = 1):
@@ -18,16 +19,29 @@ class GPT3():
     def tokenize(self, prompt):
         return self.tokenizer(prompt)['input_ids']
 
-    def generate(self, prompt, max_tokens):
+    def generate(self, prompt, max_tokens, model, stop_tokens):
+        time.sleep(2)
+
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
 
+        # Decode model input
+        model_dict = {
+            "ada": "text-ada-001",
+            "babbage": "text-babbage-001",
+            "curie": "text-curie-001",
+            "davinci-001": "text-davinci-001",
+            "davinci-002": "text-davinci-002"
+        }
+        model_string = model_dict[model]
+
         # Fetch response from OpenAI API
         response = openai.Completion.create(
-            model="text-davinci-002",
+            model=model_string,
             prompt=self.tokenize(prompt),
             temperature=0.8,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            stop = stop_tokens
         )
 
         # Extract and clean generated text response
@@ -36,6 +50,7 @@ class GPT3():
         return response
 
     def get_logprobs(self, prompt, max_tokens):
+        time.sleep(2)
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
 
