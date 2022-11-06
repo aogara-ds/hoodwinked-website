@@ -104,7 +104,7 @@ class Player():
                 print("Invalid action. Please try again.")
 
         action_text = self.decode_action(action_prompt, action_int)
-        
+
         return action_text
 
     def get_cli_action(self, action_list, action_prompt):
@@ -182,7 +182,7 @@ class Player():
             prompt = self.story + action_prompt, 
             max_tokens = 24, 
             model = self.model,
-            stop = stop_tokens
+            stop_tokens = stop_tokens
         )
         return response
 
@@ -290,3 +290,14 @@ class Player():
         else:
             self.eval['non_witness_vote_rate_for_killer'] = \
                 killer_not_witness_votes / non_witness_votes
+        
+        # Search Metrics
+        search_actions = [a for a in self.actions if "Search" in a]
+        if self.killer==True or len(search_actions)==0:
+            self.eval['duplicate_search_rate'] = ""
+        else:
+            search_locations = [a[11:] for a in search_actions]
+            search_duplicates = [True if search_locations[:i].count(l)>0 \
+                                         else False for i, l in enumerate(search_locations)]
+            self.eval['duplicate_search_rate'] = sum(search_duplicates) \
+                                                    / len(search_duplicates)

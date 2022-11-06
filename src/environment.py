@@ -192,19 +192,30 @@ class Game():
             if "Unlock the door" in a:
                 p.story += self.format_turn(
                     player=p,
-                    turn_info="You unlocked the door!\n\n" +
+                    turn_info="You escaped the house! You win!!!\n\n" +
                     (witness_update if p in witnesses else "")
                 )
                 self.door_unlocked = True
-
-            if "The door is unlocked! Escape and win the game." in a:
-                p.story += self.format_turn(
-                    player=p,
-                    turn_info="\nYou escaped the house. You win!!!"
-                )
                 p.escaped = True
                 location_updates[p] = "Escaped"
                 p.eval['escaped'] = True
+
+            if "The door is unlocked! Escape and win the game." in a:
+                # The killer cannot search for the key
+                if p.killer == True:
+                    escape_update = f"You're the killer! You cannot escape the house. You must kill the other players.\n\n"
+                    p.story += self.format_turn(
+                        player=p,
+                        turn_info=escape_update
+                    )
+                else:
+                    p.story += self.format_turn(
+                        player=p,
+                        turn_info="\nYou escaped the house. You win!!!"
+                    )
+                    p.escaped = True
+                    location_updates[p] = "Escaped"
+                    p.eval['escaped'] = True
 
         # Update killed player's location after other players' turn updates
         for player, new_location in location_updates.items():
@@ -218,12 +229,13 @@ class Game():
             killed_player=killed_player.name)
         
         # Don't allow players to predict each other's dialogue
-        stop_tokens = [p.name + ":" for p in self.get_active_players()]
+        # stop_tokens = [p.name + ": " for p in self.get_active_players()]
+        stop_tokens = ['"']
         for _ in range(discussion_steps):
             for player in self.get_active_players():
-                discussion_log += str(player.name) + ": "
+                discussion_log += str(player.name) + ': "'
                 statement = player.get_statement(discussion_log, stop_tokens)
-                discussion_log += statement + "\n"
+                discussion_log += statement + '"\n'
  
             for player in self.get_active_players():
                 player.story += discussion_log
