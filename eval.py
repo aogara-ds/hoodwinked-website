@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 import time
 from src.environment import Game
@@ -58,14 +59,10 @@ def run_job(
             eval_dict["num_players"].extend([num_players for _ in range(num_players)])
             eval_dict["discussion"].extend([discussion for _ in range(num_players)])
 
-            # # Rate Limiting: Only three games per minute
+            # Count API hits for monitoring
             api_hits = sum(eval_dict['num_turns'][-num_players:]) + \
                 sum([i if (type(i)!=str) else 0 for i in eval_dict['num_killed'][-num_players:]]) * 2 * num_players
-            print(f'api_hits {api_hits}')
-            # if time.time() - start_time < api_hits - 10:
-            #     sleeping_time =  api_hits - runtime + 10
-            #     print(f'sleep for {sleeping_time}')
-            #     time.sleep(sleeping_time)
+            print(f'api_hits: {api_hits}')
 
         # Catch errors and continue with the next game
         except Exception as e:
@@ -92,14 +89,17 @@ def get_save_path():
 
 if __name__ == "__main__":
     # Read the schedule of jobs
-    schedule = pd.read_csv("jobs/schedule_8.csv")
+    schedule = pd.read_csv("jobs/schedule_11.csv")
     save_path = get_save_path()
     
     # Set up the evaluation structure
     results_cols = [
         "game_num", "runtime", "num_players", "discussion",
         "name", "agent", "killer", "num_turns", "banished",
-        "killed", "escaped", "num_killed", "num_escaped", "story"
+        "killed", "escaped", "num_killed", "num_escaped", 
+        "duplicate_search_rate", "vote_rate_for_self", "vote_rate_for_killer", 
+        "witness_vote_rate_for_killer", "non_witness_vote_rate_for_killer",
+        "story", "actions", "votes", "witness_during_vote",
     ]
     results = {colname: [] for colname in results_cols}
 
@@ -126,6 +126,4 @@ if __name__ == "__main__":
         results_df = pd.DataFrame(results)
         results_df.to_csv(save_path)
 
-
     # TODO: Reindex games
-    
