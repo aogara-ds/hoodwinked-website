@@ -1,0 +1,64 @@
+.window {
+    background-color: #1e1e1e;
+    color: white;
+    font-family: 'Courier New', monospace;
+    width: 75%;
+    height: 100%;
+    position: fixed;
+    left: 25%;
+    top: 0;
+    bottom: 0;
+}
+
+.history {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    position: absolute;
+    left: 12.5%;
+    top: 2.5%;
+    width: 70%;
+    height: 77.5%;  
+}
+
+/* Style the input box */
+.input {
+    display: flex;
+    align-items: center;
+    overflow-y: scroll;
+    padding: 2.5%;
+    position: absolute;
+    left: 10%;
+    top: 85%;
+    height: 2.5%;
+    width: 70%;
+    background-color: #404040;
+}
+
+/* Style the input field */
+.input input {
+    background-color: #404040;
+    color: white;
+    font-family: 'Courier New', monospace;
+    flex: 1; 
+    border: 0;
+    font-size: 16px;
+    outline: 0;
+    padding: 10px;
+    overflow: scroll;
+}
+
+/* Style the send button */
+.input button {
+    background: #404040;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 1em;
+    border: 0;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.input button:active {
+    background: #505050;
+}
