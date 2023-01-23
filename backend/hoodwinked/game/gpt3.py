@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from transformers import GPT2Tokenizer
 from transformers.utils import logging
 import time
+import asyncio
 
 class GPT3():
     def __init__(self, max_tokens = 16, temperature = 1):
@@ -20,7 +21,8 @@ class GPT3():
         return self.tokenizer(prompt)['input_ids']
 
     def generate(self, prompt, max_tokens, model, stop_tokens):
-        time.sleep(2)
+        # # Crude rate limiting
+        # time.sleep(2)
 
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
@@ -49,8 +51,14 @@ class GPT3():
         response = response.replace('\n', '')
         return response
 
-    def get_logprobs(self, prompt, max_tokens):
-        time.sleep(2)
+    async def get_logprobs(self, prompt, max_tokens):
+        # # Rate limiting options
+        # # Only one ping per 2 seconds
+        # time.sleep(2)
+        # # One ping per player per 2 seconds
+        # await asyncio.sleep(2)
+
+
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
 

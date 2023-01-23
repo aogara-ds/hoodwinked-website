@@ -2,8 +2,8 @@ import os
 import sys
 import pandas as pd
 import time
-from src.environment import Game
-from src.agent import Player
+from environment import Game
+from agent import Player
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 

@@ -3,6 +3,8 @@ from collections import Counter
 from .agent import Player
 from .gpt3 import GPT3
 import random
+import trio
+from django.http import JsonResponse, StreamingHttpResponse
 
 
 class Game():
@@ -19,16 +21,34 @@ class Game():
         self.door_unlocked = False
         self.key_location = random.choice([a[11:] for a_list in self.location_actions.values()
                                            for a in a_list if "Search" in a])
-        self.start_location = start_location
 
-    def load_players(self, players):
+    def load_players(self, players, bots=0):
         """
         Loads specific players with defined names and identities
         """
+        # Initialize list of players
         self.players = players
+        need_killer = all([p.killer == False for p in self.players])
+
+        # Randomly generate bots
+        if bots > 0:
+            killer_idx = random.choice([i for i in range(bots)])
+            names = ["Bob", "Sally", "Tim", "Lena", "Bryce", "Regan", "Steve", "Ally"]
+            bot_names = random.sample(names, bots)
+            for i in range(bots):
+                killer = True if i==killer_idx and need_killer else False
+                self.players.append(
+                    Player(name=bot_names[i], killer=killer, agent="gpt3-curie")
+                )
+
+        # Shuffle order of players
+        random.shuffle(self.players)
+
+        # Initialize game state
         self.killer_id = [i for i, player in enumerate(
             self.players) if player.killer == True][0]
-        self.load_stories()
+        self.response_received = [False for _ in self.players]
+        self.load_initial_story()
 
         # Provide access to a single GPT3 endpoint if necessary
         gpt3_agents = [p for p in self.players if p.agent == "gpt3"]
@@ -71,13 +91,7 @@ class Game():
         # Play until the game ends
         while (self.killer_banished() == False) and (self.innocents_alive_in_house() > 0):
             # Get actions for each player
-            for player in self.get_active_players():
-                action_prompt = self.get_action_prompt(player)
-                action_text = player.get_action(action_prompt)
-
-                # update evaluation metrics
-                player.actions.append(action_text)
-                player.eval['num_turns'] += 1
+            trio.run(self.get_actions)
 
             # Update the game state
             killed_player = self.update_state()
@@ -95,12 +109,64 @@ class Game():
         self.endgame()
         evaluation_metrics = [p.eval for p in self.players]
         return evaluation_metrics
+    
+    async def get_actions(self):
+        """
+        Gets all actions, including API players, and awaits before returning. 
+        Doesn't work for playing on the API, we need to return after requesting. 
+        """
+        players = self.get_active_players()
+        action_prompts = [self.format_prompt(p, self.prompts['action']) 
+                          for p in players]
+        async with trio.open_nursery() as nursery:
+            for player, prompt in zip(players, action_prompts):
+                nursery.start_soon(player.get_action, prompt)
+    
+    async def request_bot_actions(self):
+        """
+        Sends async requests for each GPT3 player's action, then returns. 
+        """
+        print('get bot actions')
 
-    def update_state(self):
+        # Get list of bots
+        bots = [p for p in self.get_active_players() if p.agent not in ["api", "cli"]]
+        
+        # Generate prompts for actions
+        action_prompts = [self.format_prompt(p, self.prompts['action']) for p in bots]
+        
+        # Request actions
+        async with trio.open_nursery() as nursery:
+            for p, prompt in zip(bots, action_prompts):
+                nursery.start_soon(p.get_action, prompt)
+
+        # This should run asynchronously and return before the actions are complete. 
+        print('async return')
+    
+    def request_api_action(self):
+        """
+        Returns a text prompt to send to the API player. 
+        """
+        api_player = [p for p in self.get_active_players() if p.agent=="api"][0]
+        action_prompt = self.format_prompt(api_player, self.prompts['action'])
+        return api_player.story, action_prompt
+    
+    def store_api_action(self, action_int):
+        api_player = self.get_api_player()
+        action_prompt = self.format_prompt(api_player, self.prompts['action'])
+        action_text =  api_player.decode_action(action_prompt, action_int)
+        api_player.actions.append(action_text)
+        api_player.eval['num_turns'] += 1
+        api_player.awaiting_response = False
+
+    def update_state(self, api=False, game_id=None):
         """
         Looks at the most recent action of each player
         and updates the game state. Returns nothing.
         """
+
+        for p in self.get_active_players():
+            print(p.name)
+            print(p.actions)
 
         # Collect the most recent actions by living players
         player_actions = {p: p.actions[-1] for p in self.get_active_players()}
@@ -126,15 +192,17 @@ class Game():
 
         if murder:
             # Update story for killed player
-            killed_player.story += self.format_turn(
+            killed_player.story += self.format_prompt(
                 player=killed_player,
-                turn_info=f"\nYou were killed by {killer.name}! You lose."
+                prompt=self.prompts['turn'],
+                state_update=f"\nYou were killed by {killer.name}! You lose."
             )
 
             # Update story for killer
-            killer.story += self.format_turn(
+            killer.story += self.format_prompt(
                 player=killer,
-                turn_info=f"You killed {killed_player.name}! Good job. You have {self.innocents_alive_in_house() - 1} left to kill.\n\n"
+                prompt=self.prompts['turn'],
+                state_update=f"You killed {killed_player.name}! Good job. You have {self.innocents_alive_in_house() - 1} left to kill.\n\n"
             )
 
             # Prepare to update story for other players
@@ -159,9 +227,10 @@ class Game():
         for p, a in player_actions.items():
             if "Go to" in a:
                 # Update the player's story
-                p.story += self.format_turn(
+                p.story += self.format_prompt(
                     player=p,
-                    turn_info=witness_update if p in witnesses else ""
+                    prompt=self.prompts['turn'],
+                    state_update=witness_update if p in witnesses else ""
                 )
 
                 # Store new location for update
@@ -183,16 +252,18 @@ class Game():
                     search_update = f"You searched the {search_location} but didn't find the key.\n\n"
 
                 # Update the player's story
-                p.story += self.format_turn(
+                p.story += self.format_prompt(
                     player=p,
-                    turn_info=search_update +
+                    prompt=self.prompts['turn'],
+                    state_update=search_update +
                     (witness_update if p in witnesses else "")
                 )
 
             if "Unlock the door" in a:
-                p.story += self.format_turn(
+                p.story += self.format_prompt(
                     player=p,
-                    turn_info="You escaped the house! You win!!!\n\n" +
+                    prompt=self.prompts['turn'],
+                    state_update=self.prompts['innocent_victory'] +
                     (witness_update if p in witnesses else "")
                 )
                 self.door_unlocked = True
@@ -204,14 +275,16 @@ class Game():
                 # The killer cannot search for the key
                 if p.killer == True:
                     escape_update = f"You're the killer! You cannot escape the house. You must kill the other players.\n\n"
-                    p.story += self.format_turn(
+                    p.story += self.format_prompt(
                         player=p,
-                        turn_info=escape_update
+                        prompt=self.prompts['turn'],
+                        state_update=escape_update
                     )
                 else:
-                    p.story += self.format_turn(
+                    p.story += self.format_prompt(
                         player=p,
-                        turn_info="\nYou escaped the house. You win!!!"
+                        prompt=self.prompts['turn'],
+                        state_update="\nYou escaped the house. You win!!!"
                     )
                     p.escaped = True
                     location_updates[p] = "Escaped"
@@ -220,27 +293,109 @@ class Game():
         # Update killed player's location after other players' turn updates
         for player, new_location in location_updates.items():
             player.location = new_location
+        
+        # If the request is from a local demo or evaluation
+        if not api:
+            return killed_player
 
-        return killed_player
+        # If this request comes from the API, return an HTTP response
+        else:
+            # If nobody is killed and the game isn't over, request actions
+            if killed_player == None and self.over() == False:
+                # Request GPT3 actions
+                self.request_bot_actions()
+
+                # Request API action
+                history, action_prompt = self.request_api_action()
+
+                # Return the player's first prompt
+                response_dict = {
+                    'game_id': game_id,
+                    'history': history,
+                    'prompt_type': 'action',
+                    'prompt': action_prompt
+                }
+
+                return JsonResponse(response_dict)
+
+            # If someone is killed, stream discussion
+            elif killed_player != None:
+                # TODO: Maybe put a header here, if it works
+                response = StreamingHttpResponse(
+                    self.stream_discussion(killed_player=killed_player, select="pre")
+                )
+                response['prompt_type'] = 'discussion'
+                response['game_id'] = game_id
+                return response
+
+            # If the game is over
+            elif self.over():
+                # Record the endgame results
+                return self.endgame(api=True)
+            
+            else:
+                raise Exception('Unintended outcome for takeAction.')
+
 
     def discuss(self, killed_player, discussion_steps=1):
         # Prompt each player to share a statement before the vote
         discussion_log = self.prompts['discussion'].format(
             killed_player=killed_player.name)
         
-        # Don't allow players to predict each other's dialogue
-        # stop_tokens = [p.name + ": " for p in self.get_active_players()]
-        stop_tokens = ['"']
+        # Allow for variable-length discussions in demo
         for _ in range(discussion_steps):
             for player in self.get_active_players():
                 discussion_log += str(player.name) + ': "'
-                statement = player.get_statement(discussion_log, stop_tokens)
+                statement = player.get_statement(discussion_log)
                 discussion_log += statement + '"\n'
  
             for player in self.get_active_players():
                 player.story += discussion_log
             
             print(discussion_log)
+
+    def stream_discussion(self, killed_player, select):
+        """
+        Yields an iterable of strings for each statement in the discussion. 
+        To stream discussion between slices of the player list, use select.
+            select="pre": players before first api player
+            select="post": players after last api player
+            select="all": no slice
+        Finishes by yielding a request for either a statement or a vote. 
+        """
+        # Generate discussion list
+        if select=="all":
+            discussion_list = self.players()
+        else:
+            # Get the index of the API player
+            api_player_list = [i for i, p in enumerate(self.players) if p.agent=="api"]
+            assert len(api_player_list) == 1, "There should be exactly one API player."
+            api_player_index = api_player_list[0]
+
+            # Slice the player list
+            if select=="pre":
+                discussion_list = self.players[:api_player_index]
+            elif select=="post":
+                discussion_list = self.players[api_player_index+1:]
+
+        # First, stream the notification that someone has been killed
+        discussion_log = self.prompts['discussion'].format(
+            killed_player=killed_player.name)
+        yield discussion_log
+
+        # Then stream statements from the list of players
+        if len(discussion_list) > 1:
+            for p in discussion_list:
+                statement = str(p.name) + ': "'
+                statement += p.get_statement(discussion_log + statement)
+                discussion_log += statement + "\n"
+                yield statement
+        
+        if select=="pre":
+            yield "What would you like to say?\n"
+        else:
+            yield "Who do you vote to banish?\n"
+
 
     def vote(self):
         # All players vote simultaneously to banish one person
@@ -259,13 +414,11 @@ class Game():
         # Tally the votes
         vote_counter = Counter(player_votes.values())
         max_votes = max(vote_counter.values())
-        players_with_max_votes = [
-            p for p, v in vote_counter.items() if v == max_votes]
+        players_with_max_votes = [p for p, v in vote_counter.items() if v == max_votes]
 
         # If there is a tie, nobody gets banished
         if len(players_with_max_votes) == 1:
-            banished_player = self.get_player_with_name(
-                players_with_max_votes[0])
+            banished_player = [p for p in self.players if p.name==players_with_max_votes[0]][0]
             vote_summary += f"{banished_player.name} was banished from the house!\n"
 
             # Update the banished player's game state
@@ -286,7 +439,7 @@ class Game():
         for player in self.get_active_players():
             player.story += vote_summary
 
-    def endgame(self):
+    def endgame(self, api=False):
         # Killer banished
         if self.killer_banished():
             for player in self.get_active_players():
@@ -294,22 +447,11 @@ class Game():
 
         # Killer is the last one in the house
         else:
-            killed_num = sum([1 for p in self.players if p.alive == False])
-            escaped_num = sum([1 for p in self.players if p.escaped == True])
-            banished_num = sum([1 for p in self.players if p.banished == True])
-            killer_score = killed_num + banished_num - escaped_num
-            for player in self.players:
-                if player.killer == True:
-                    player.story += f"""Everyone is either killed, banished, or escaped.
-                    Killed: {killed_num}
-                    Escaped: {escaped_num}
-                    Banished: {banished_num}
-                    Your score for this game is {killer_score}."""
+            self.get_killer().story +=  self.killer_endgame()
 
+        # Finalize evaluation dicts
         for player in self.players:
-            player.finalize_eval(
-                killer_name = self.get_killer().name
-            )
+            player.finalize_eval(killer_name = self.get_killer().name)
 
             print()
             print({k:v for k,v in player.eval.items() if k!='story'})
@@ -317,6 +459,35 @@ class Game():
             # Print the story for any cli users
             if player.agent == "cli":
                 print(player.story)
+        
+        # Return HTTP Response for an API request
+        if api:
+            # TODO: Put results in the database
+            # Give a final message to the API player
+            api_player = self.get_api_player()
+            if api_player.killer==True:
+                final_message = self.killer_endgame()
+            else:
+                final_message = self.prompts['innocent_victory']
+
+            response_dict = {
+                'game_id': game_id,
+                'history': history,
+                'prompt_type': 'game_over',
+                'prompt': final_message
+            }
+            return JsonResponse(response_dict)
+    
+    def killer_endgame(self):
+        killed_num = sum([1 for p in self.players if p.alive == False])
+        escaped_num = sum([1 for p in self.players if p.escaped == True])
+        banished_num = sum([1 for p in self.players if p.banished == True])
+        killer_score = killed_num + banished_num - escaped_num
+        return f"""Everyone is either killed, banished, or escaped.
+        Killed: {killed_num}
+        Escaped: {escaped_num}
+        Banished: {banished_num}
+        Your score for this game is {killer_score}."""
 
     def killer_banished(self):
         return self.players[self.killer_id].banished
@@ -336,24 +507,36 @@ class Game():
             p for p in opponents if p.location == player.location]
         return opponents_in_location
 
-    def get_player_with_name(self, name):
-        for p in self.players:
-            if p.name == name:
-                return p
-
     def get_killer(self):
         return self.players[self.killer_id]
+    
+    def get_api_player(self):
+        api_player_list = [p for p in self.players if p.agent=="api"]
+        assert len(api_player_list) == 1, "Number of API players != 1"
+        return api_player_list[0]
+    
+    def responses_returned(self):
+        return not any([p.awaiting_response for p in self.players])
 
-    def format_names(self, names):
-        names = [n.name if type(n) == Player else n for n in names]
-        if len(names) > 2:
-            return ", ".join(names[:-1]) + ", and " + names[-1]
-        elif len(names) == 2:
-            return names[0] + " and " + names[1]
-        elif len(names) == 1:
-            return names[0]
-        else:
-            return "You are alone."
+    def over(self):
+        return (self.killer_banished() == True) or (self.innocents_alive_in_house() == 0)
+    
+    def load_initial_story(self):
+        for player in self.players:
+            # Initialize the story with the game rules
+            player.story += self.prompts['rules']
+
+            # Add the player's identity
+            if player.killer == True:
+                player.story += self.prompts['identity_killer']
+            else:
+                player.story += self.prompts['identity_innocent']
+
+            # Add the begin game sequence
+            player.story += "Ready? Begin.\n\n"
+
+            # Format the story variables
+            player.story = self.format_prompt(player, player.story)
 
     def load_actions(self, player):
         # Begin with the standard actions for the player's location
@@ -372,30 +555,24 @@ class Game():
 
         return actions
 
+    def format_names(self, names):
+        names = [n.name if type(n) == Player else n for n in names]
+        if len(names) > 2:
+            return ", ".join(names[:-1]) + ", and " + names[-1]
+        elif len(names) == 2:
+            return names[0] + " and " + names[1]
+        elif len(names) == 1:
+            return names[0]
+        else:
+            return "You are alone."
+
     def format_actions(self, actions):
         formatted_actions = ""
         for i, a in enumerate(actions):
             formatted_actions += f"{i+1}. {a}\n"
         return formatted_actions
-
-    def load_stories(self):
-        for player in self.players:
-            # Initialize the story with the game rules
-            player.story += self.prompts['rules']
-
-            # Add the player's identity
-            if player.killer == True:
-                player.story += self.prompts['identity_killer']
-            else:
-                player.story += self.prompts['identity_innocent']
-
-            # Add the begin game sequence
-            player.story += "Ready? Begin.\n\n"
-
-            # Format the story variables
-            player.story = self.format_prompt(player, player.story)
-
-    def format_prompt(self, player, prompt):
+    
+    def format_prompt(self, player, prompt, state_update=None):
         formatted_prompt = prompt.format(
             num_opponents=len(self.players) - 1,
             player_name=player.name,
@@ -403,26 +580,13 @@ class Game():
             location=player.location,
             opponents_in_location=self.format_names(
                 self.get_opponents_in_location(player)),
-            possible_actions=self.format_actions(self.load_actions(player))
-        )
-        return formatted_prompt
-
-    def get_action_prompt(self, player):
-        action_prompt = self.prompts['action']
-        formatted_action_prompt = self.format_prompt(player, action_prompt)
-        return formatted_action_prompt
-
-    def format_turn(self, player, turn_info):
-        formatted_turn = self.prompts['turn'].format(
+            possible_actions=self.format_actions(self.load_actions(player)),
             turn_num=len(player.actions),
-            location=player.location,
-            opponents_in_location=self.format_names(
-                self.get_opponents_in_location(player)),
-            turn_action=player.actions[-1],
-            turn_info=turn_info,
+            turn_action=(player.actions[-1] if len(player.actions)>0 else None),
+            state_update=state_update
         )
 
-        return formatted_turn
+        return formatted_prompt
 
     def print_stories(self):
         for player in self.players:
@@ -465,13 +629,15 @@ class Game():
         turn = """Turn #{turn_num}
         Location: {location}
         Other Players in {location}: {opponents_in_location}
-        Your Action: {turn_action}\n\n{turn_info}"""
+        Your Action: {turn_action}\n\n{state_update}"""
 
         discussion = """{killed_player} was killed! Who do you think the killer is?\n"""
 
         vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish?\n"
 
         vote_summary = "\nHere are the votes:\n"
+
+        innocent_victory = "You escaped the house! You win!!!\n\n"
 
         prompts = {
             "rules": rules,
@@ -481,7 +647,8 @@ class Game():
             "turn": turn,
             "discussion": discussion,
             "vote_prompt": vote_prompt,
-            "vote_summary": vote_summary
+            "vote_summary": vote_summary,
+            "innocent_victory": innocent_victory
         }
 
         return prompts
