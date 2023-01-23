@@ -15,10 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from hoodwinked.api.views import startGame, takeAction
+from hoodwinked.api.views import startGame, takeAction, makeStatement
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('start/', startGame, name="startGame"),
-    path('action/', takeAction, name="takeAction")
+    path('action/', takeAction, name="takeAction"),
+    path('statement/', makeStatement, name='makeStatement')
 ]

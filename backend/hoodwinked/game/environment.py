@@ -161,7 +161,8 @@ class Game():
     def update_state(self, api=False, game_id=None):
         """
         Looks at the most recent action of each player
-        and updates the game state. Returns nothing.
+        and updates the game state. Returns the killed player
+        for local runs, or an HTTP Response for an API request.
         """
 
         for p in self.get_active_players():
@@ -322,7 +323,7 @@ class Game():
             elif killed_player != None:
                 # TODO: Maybe put a header here, if it works
                 response = StreamingHttpResponse(
-                    self.stream_discussion(killed_player=killed_player, select="pre")
+                    self.stream_discussion(select="pre", killed_player=killed_player)
                 )
                 response['prompt_type'] = 'discussion'
                 response['game_id'] = game_id
@@ -347,14 +348,14 @@ class Game():
             for player in self.get_active_players():
                 discussion_log += str(player.name) + ': "'
                 statement = player.get_statement(discussion_log)
-                discussion_log += statement + '"\n'
- 
+                discussion_log += statement
+                
             for player in self.get_active_players():
                 player.story += discussion_log
             
             print(discussion_log)
 
-    def stream_discussion(self, killed_player, select):
+    def stream_discussion(self, select, killed_player=None, statement=None):
         """
         Yields an iterable of strings for each statement in the discussion. 
         To stream discussion between slices of the player list, use select.
@@ -378,10 +379,16 @@ class Game():
             elif select=="post":
                 discussion_list = self.players[api_player_index+1:]
 
-        # First, stream the notification that someone has been killed
-        discussion_log = self.prompts['discussion'].format(
-            killed_player=killed_player.name)
-        yield discussion_log
+        # Build the discussion log
+        discussion_log = ""
+        if select == "post":
+            # If the API player has already made a statement, log it
+            discussion_log += statement
+        else:
+            # If this is the beginning of the discussion, log the killed player
+            discussion_log += self.prompts['discussion'].format(
+                killed_player=killed_player.name)
+            yield discussion_log
 
         # Then stream statements from the list of players
         if len(discussion_list) > 1:
@@ -391,13 +398,53 @@ class Game():
                 discussion_log += statement + "\n"
                 yield statement
         
+        # Store the discussion history for each player
+        for player in self.get_active_players():
+            player.story += discussion_log
+            player.story += self.vote_prompt()
+        
         if select=="pre":
             yield "What would you like to say?\n"
         else:
-            yield "Who do you vote to banish?\n"
+            yield self.vote_prompt()
 
+        
+        # TODO Log results of discussion wherever necessary
+    
+    def vote_prompt(self):
+        # Prompt each player to vote for a player to banish
+        vote_prompt = self.prompts['vote_prompt']
+        vote_prompt += "\n".join(str(num+1) + ". " + p.name 
+            for num, p in enumerate(self.get_active_players()))
+        vote_prompt += f"\nWho do you vote to banish?\n"
+        return vote_prompt
+    
+    def vote_summary(self, player_votes):
+        # TODO: Need the player_votes dict
+        # Report who voted for who
+        vote_summary = self.prompts['vote_summary']
+        for player in self.get_active_players():
+            vote_summary += f"{player.name} voted to banish {player_votes[player]}\n"
+        
+         # Tally the votes
+        vote_counter = Counter(player_votes.values())
+        max_votes = max(vote_counter.values())
+        players_with_max_votes = [p for p, v in vote_counter.items() if v == max_votes]
+
+        # If there is a tie, no one is banished
+        if len(players_with_max_votes) > 1:
+            vote_summary += f"There is a tie in votes, so nobody was banished.\n\n"
+            banished_player = None
+
+        # If there is a clear winner, banish them
+        else:
+            # TODO: Write this after you have player_votes dict
+            a = 0
+        
+        return vote_summary, banished_player
 
     def vote(self):
+        # TODO: Replace this with methods above
         # All players vote simultaneously to banish one person
         player_votes = dict()
         vote_summary = self.prompts['vote_summary']

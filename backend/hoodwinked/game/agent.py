@@ -129,7 +129,6 @@ class Player():
     async def get_random_action(self, action_list):
         sleep_time = int(random.random() * 5)
         print(sleep_time)
-        await asyncio.sleep(sleep_time)
         print(f"finished {sleep_time}")
         return int(random.choice(action_list))
 
@@ -186,11 +185,12 @@ class Player():
 
     def get_statement(self, discussion_log):
         if self.agent == "random":
-            return self.get_idk_statement()
+            statement = self.get_idk_statement()
         elif self.agent == "cli":
-            return self.get_cli_statement(discussion_log)
+            statement = self.get_cli_statement(discussion_log)
         elif self.agent == "gpt3":
-            return self.get_gpt3_statement(discussion_log)
+            statement = self.get_gpt3_statement(discussion_log)
+        return statement + '"\n'
 
     def get_idk_statement(self):
         return "I don't know who the killer is."
@@ -216,7 +216,7 @@ class Player():
         elif self.agent == "cli":
             vote_int = self.get_cli_vote(vote_prompt)
         elif self.agent == "gpt3":
-            vote_int = asyncio.run(self.get_gpt3_vote(vote_prompt))
+            vote_int = trio.run(self.get_gpt3_vote(vote_prompt))
 
         # Return the name of the person voted for
         vote = self.decode_vote(vote_prompt, vote_int)
