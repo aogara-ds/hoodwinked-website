@@ -314,7 +314,8 @@ class Game():
                     'game_id': game_id,
                     'history': history,
                     'prompt_type': 'action',
-                    'prompt': action_prompt
+                    'prompt': action_prompt,
+                    'next_request': 'action',
                 }
 
                 return JsonResponse(response_dict)
@@ -327,6 +328,11 @@ class Game():
                 )
                 response['prompt_type'] = 'discussion'
                 response['game_id'] = game_id
+                response['prompt_type'] = 'discussion'
+                if self.get_active_players()[-1].agent == "api":
+                    response['next_request'] = 'vote'
+                else:
+                    response['next_request'] = 'discussion'
                 return response
 
             # If the game is over
@@ -521,7 +527,8 @@ class Game():
                 'game_id': game_id,
                 'history': history,
                 'prompt_type': 'game_over',
-                'prompt': final_message
+                'prompt': final_message,
+                'next_request': 'game_over',
             }
             return JsonResponse(response_dict)
     

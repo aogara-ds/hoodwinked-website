@@ -19,7 +19,7 @@ def startGame(request, bots=5):
     Example URL: /start/?player_name=Aidan&killer=True
     """
     # Get parameters from query string
-    name = str(request.GET.get('name'))
+    player_name = str(request.GET.get('playerName'))
     killer = bool(request.GET.get('killer'))
 
     # Begin a new game
@@ -30,7 +30,7 @@ def startGame(request, bots=5):
     settings.HOODWINKED_GAMES[game_id] = game
     
     # Load players into the game
-    api_player = Player(name=name, killer=killer, agent="api")
+    api_player = Player(name=player_name, killer=killer, agent="api")
     game.load_players([api_player], bots=bots)
 
     # Request GPT3 actions
@@ -44,7 +44,8 @@ def startGame(request, bots=5):
         'game_id': game_id,
         'history': history,
         'prompt_type': 'action',
-        'prompt': action_prompt
+        'prompt': action_prompt,
+        'next_request': 'action',
     }
     return JsonResponse(response_dict)
 
@@ -110,6 +111,8 @@ def makeStatement(request):
     response = StreamingHttpResponse(
         game.stream_discussion(select="post", statement=statement)
     )
+    response['prompt_type'] = 'vote'
+    response['next_request'] = 'vote'
 
     return response
 
