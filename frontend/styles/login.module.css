@@ -4,50 +4,41 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #404040;
+    background-color: black;
     color: white;
     font-family: 'Courier New', monospace;
-    width: 50%;
+    width: 25%;
     padding: 2.5%;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     z-index: 999;
 }
-    
-/* Style the title of the popup */
-.login h2 {
-    text-align: left;
-    font-size: 1.5em;
-    margin-bottom: 2.5%;
-}
-
-/* Style the form label */
-.login label {
-    font-size: 1.25em;
-    margin-bottom: 1%;
-}
 
 /* Style the form input */
 .login input {
-    background-color: #404040;
+    background-color: black;
     color: white;
     font-family: 'Courier New', monospace;
     border: 0;
     font-size: 16px;
     outline: 0;
     padding: 10px;
+    padding-left: 0px;
     overflow: scroll;
     margin-bottom: 2.5%;
+    width: 75%;
 }
 
 /* Style the submit button */
 .login button {
     color: white;
+    background-color: black;
     font-family: 'Courier New', monospace;
     font-size: 1em;
     border: 0;
     padding: 10px;
     cursor: pointer;
     text-decoration: underline;
+    display: table-cell;
 }
 
 /* Style the overlay */
@@ -57,7 +48,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     z-index: 998;
 }
 

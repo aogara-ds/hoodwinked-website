@@ -33,6 +33,7 @@
   font-family: 'Courier New', monospace;
   color: white;
   cursor: pointer;
+  font-size: 1em;
 }
 
 .sidebar .option:hover {

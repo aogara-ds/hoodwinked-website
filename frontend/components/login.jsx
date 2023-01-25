@@ -17,9 +17,9 @@ export default function Login({ setShowLogin, setName }) {
       <div className={styles.loginOverlay}>
         <div className={styles.login}>
             <form onSubmit={handleSubmit}>
-                <h2>login to play</h2>
+                {/* <h2>login to play</h2> */}
+                <p>What is your name?</p>
                 <label>
-                  Name:
                   <input type="text" ref={inputRef}/>
                 </label>
                 <button type="submit">submit</button>

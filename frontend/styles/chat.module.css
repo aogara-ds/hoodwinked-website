@@ -8,6 +8,7 @@
     left: 25%;
     top: 0;
     bottom: 0;
+    font-size: 1em;
 }
 
 .history {
@@ -16,7 +17,7 @@
     overflow-y: scroll;
     position: absolute;
     left: 12.5%;
-    top: 2.5%;
+    top: 30px;
     width: 70%;
     height: 77.5%;  
 }
@@ -42,10 +43,10 @@
     font-family: 'Courier New', monospace;
     flex: 1; 
     border: 0;
-    font-size: 16px;
     outline: 0;
     padding: 10px;
     overflow: scroll;
+    font-size: 1em;
 }
 
 /* Style the send button */
@@ -53,10 +54,10 @@
     background: #404040;
     color: #fff;
     font-family: 'Courier New', monospace;
-    font-size: 1em;
     border: 0;
     padding: 10px;
     cursor: pointer;
+    font-size: 1em;
 }
 
 .input button:active {
