@@ -1,0 +1,79 @@
+/* Style the login popup window */
+.login {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #404040;
+    color: white;
+    font-family: 'Courier New', monospace;
+    width: 50%;
+    padding: 2.5%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+    
+/* Style the title of the popup */
+.login h2 {
+    text-align: left;
+    font-size: 1.5em;
+    margin-bottom: 2.5%;
+}
+
+/* Style the form label */
+.login label {
+    font-size: 1.25em;
+    margin-bottom: 1%;
+}
+
+/* Style the form input */
+.login input {
+    background-color: #404040;
+    color: white;
+    font-family: 'Courier New', monospace;
+    border: 0;
+    font-size: 16px;
+    outline: 0;
+    padding: 10px;
+    overflow: scroll;
+    margin-bottom: 2.5%;
+}
+
+/* Style the submit button */
+.login button {
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 1em;
+    border: 0;
+    padding: 10px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Style the overlay */
+.loginOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* dimm the rest of the screen */
+.loginOverlay:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #404040;
+    z-index: -1;
+    opacity: 0.5;
+}
+
+/* To use the overlay you will need to add the class 'login-popup-overlay' to a div and make sure it's parent is the body and it's below the login-popup div in the HTML */
+
+/* You will also need to add the class 'login-popup' to the login-popup div */
