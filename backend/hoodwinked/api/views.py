@@ -6,6 +6,7 @@ from ..game.agent import Player
 import uuid
 import time
 import trio
+import json
 
 # Create your views here.
 def startGame(request, bots=5):
@@ -19,8 +20,12 @@ def startGame(request, bots=5):
     Example URL: /start/?player_name=Aidan&killer=True
     """
     # Get parameters from query string
-    player_name = str(request.GET.get('playerName'))
-    killer = bool(request.GET.get('killer'))
+    request_dict = read_request(request)
+    player_name = request_dict['playerName']
+    killer = request_dict['killer']
+
+    print('player name...')
+    print(player_name)
 
     # Begin a new game
     game = Game()
@@ -61,8 +66,9 @@ def takeAction(request):
     """
 
     # Get parameters from query string
-    action_int = int(request.GET.get('action_int'))
-    game_id = str(request.GET.get('game_id'))
+    request_dict = read_request(request)
+    action_int = request_dict['action_int']
+    game_id = request_dict['game_id']
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
@@ -100,8 +106,9 @@ def makeStatement(request):
     """
 
     # Get parameters from query string
-    game_id = str(request.GET.get('game_id'))
-    statement = str(request.GET.get('statement'))
+    request_dict = read_request(request)
+    game_id = request_dict['game_id']
+    statement = request_dict['statement']
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
@@ -131,8 +138,9 @@ def makeVote(request):
     """
 
     # Get parameters from query string
-    game_id = str(request.GET.get('game_id'))
-    vote = str(request.GET.get('vote'))
+    request_dict = read_request(request)
+    game_id = request_dict['game_id']
+    vote = request_dict['vote']
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
@@ -140,3 +148,7 @@ def makeVote(request):
 
     # Log vote in player.votes
     api_player.votes.append(vote)
+
+def read_request(request):
+    body_unicode = request.body.decode('utf-8')
+    return dict(json.loads(body_unicode))

@@ -6,7 +6,7 @@ export default class Sidebar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: this.props.name,
+      playerName: this.props.playerName,
       setShowLogin: this.props.setShowLogin
     };
   }

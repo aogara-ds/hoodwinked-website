@@ -2,15 +2,19 @@ import { useRef } from 'react';
 import React from 'react';
 import styles from '../styles/login.module.css';
 
-export default function Login({ setShowLogin, setName }) {
+export default function Login({ setShowLogin, startGame }) {
     // Reference to the content of the input field
     const inputRef = useRef(null);
 
     // Set the name in the global state, and get rid of the login popup
     function handleSubmit(e) {
       e.preventDefault();
-      setName(inputRef.current.value);
       setShowLogin(false);
+      startGame(
+        inputRef.current.value,
+        // TODO: Ask player if they would like to be the killer
+        (Math.floor(Math.random() * 2) == 0)
+      )
     }
   
     return (

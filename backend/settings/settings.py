@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,10 +44,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -127,3 +129,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Create a dictionary of all games
 HOODWINKED_GAMES = dict()
+
+CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
+CORS_ALLOW_CREDENTIALS = True
+
+
+
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+# CSRF_COOKIE_SECURE = False
+# CSRF_COOKIE_HTTPONLY = False
+
+
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# ALLOWED_HOSTS=['*']
+
+# CORS_ORIGIN_ALLOW_ALL = True
+
+# CORS_ALLOW_HEADERS = ['*']
+
