@@ -7,7 +7,8 @@ export default class Sidebar extends Component {
     super(props);
     this.state = {
       playerName: this.props.playerName,
-      setShowLogin: this.props.setShowLogin
+      setShowLogin: this.props.setShowLogin,
+      gameInProgress: this.props.gameInProgress,
     };
   }
 
@@ -29,10 +30,18 @@ export default class Sidebar extends Component {
   }
 }
 
-function startGameButton(setShowLogin) {
+function startGameButton(gameInProgress, setShowLogin) {
+  let text = '';
+  if (gameInProgress) {
+    text = 'new game'
+  } else {
+    text = 'start game'
+  }
   return (
     <div>
-      <p className={styles.option} onClick={() => setShowLogin(true)}>start game</p>
+      <p className={styles.option} onClick={() => setShowLogin(true)}>{text}</p>
     </div>
   );
 }
+
+

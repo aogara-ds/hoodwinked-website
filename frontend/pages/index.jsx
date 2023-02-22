@@ -9,9 +9,10 @@ export default class HomePage extends Component {
     super(props);
     this.state = {
       showLogin: false,
+      // startGame: false,
       playerName: '',
       killer: false,
-      history: '',
+      gameInProgress: false,
     };
   }
 
@@ -21,52 +22,31 @@ export default class HomePage extends Component {
         <Sidebar 
           playerName={this.state.playerName} 
           setShowLogin={this.setShowLogin}  
+          gameInProgress={this.gameInProgress}
         />
-        <Chat history={this.state.history}/>
+        <Chat 
+          startGame={this.state.startGame}
+          setStartGame={(value)=>this.setState({startGame: value})}
+          playerName={this.state.playerName}
+          killer={this.state.killer}
+          // Add a setter for any global variables
+        />
         {this.state.showLogin && 
           <Login 
-            setShowLogin={this.setShowLogin} 
-            startGame={this.startGame}
+            setShowLogin={(value)=>this.setState({showLogin: value})} 
+            setStartGame={(value)=>this.setState({startGame: value})}
+            setPlayerName={(value)=>this.setState({playerName: value})}
+            setKiller={(value)=>this.setState({killer: value})}
           />
         }
       </div>
     );
   }
 
-  setShowLogin = (value) => {
-    this.setState({showLogin: value});
-  }
-
   startGame = async (newName, killer) => {
-    console.log('here we go');
-    console.log(newName);
     this.setState({playerName: newName});
     this.setState({killer: killer});
-    this.setState({history: await fetchStartGame(newName, killer)});
-    console.log('awaited');
-    console.log(this.state.history);
-  }
-}
-
-
-
-async function fetchStartGame (newName, killer) {
-  console.log('beginning');
-  const startGameURL = 'http://127.0.0.1:8000/start/'
-  try {
-    const response = await fetch(startGameURL, {
-      method: 'POST',
-      // credentials: 'include',
-      mode: 'cors',
-      body: JSON.stringify({
-        playerName: newName,
-        killer: killer,
-      }),
-    });
-    const data = await response.json();
-    console.log('end');
-    return data.history;
-  } catch (err) {
-    console.error(err);
+    this.setState({gameState: await fetchStartGame(newName, killer)});
+    this.setState({gameInProgress: true})
   }
 }
