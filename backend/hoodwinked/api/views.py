@@ -7,6 +7,7 @@ import uuid
 import time
 import trio
 import json
+import pdb
 
 # Create your views here.
 def startGame(request, bots=5):
@@ -21,7 +22,7 @@ def startGame(request, bots=5):
     """
     # Get parameters from query string
     request_dict = read_request(request)
-    player_name = request_dict['playerName']
+    player_name = request_dict['name']
     killer = request_dict['killer']
 
     print('player name...')
