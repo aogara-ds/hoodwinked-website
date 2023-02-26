@@ -26,27 +26,26 @@
 .input {
     display: flex;
     align-items: center;
-    overflow-y: scroll;
     padding: 2.5%;
     position: absolute;
     left: 10%;
     top: 85%;
-    height: 2.5%;
+    height: 5%;
     width: 70%;
     background-color: #404040;
 }
 
 /* Style the input field */
-.input input {
+.input textarea {
     background-color: #404040;
     color: white;
     font-family: 'Courier New', monospace;
-    flex: 1; 
+    flex: 1;
     border: 0;
     outline: 0;
     padding: 10px;
-    overflow: scroll;
     font-size: 1em;
+    resize: none;
 }
 
 /* Style the send button */
@@ -58,6 +57,7 @@
     padding: 10px;
     cursor: pointer;
     font-size: 1em;
+    margin-left: 10px;
 }
 
 .input button:active {

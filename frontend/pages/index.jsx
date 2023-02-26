@@ -1,52 +1,51 @@
-import { useState, createContext, Component } from 'react';
+import { useState } from 'react';
 import Sidebar from '../components/sidebar.jsx';
 import Chat from '../components/chat.jsx';
 import Login from '../components/login.jsx';
-import axios from 'axios';
+import Head from 'next/head';
 
-export default class HomePage extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showLogin: false,
-      // startGame: false,
-      playerName: '',
-      killer: false,
-      gameInProgress: false,
-    };
+export default function HomePage() {
+  const [showLogin, setShowLogin] = useState(false);
+  const [startGame, setStartGame] = useState(false);
+  const [playerName, setPlayerName] = useState('');
+  const [killer, setKiller] = useState(false);
+  const [gameInProgress, setGameInProgress] = useState(false);
+
+  const callStartGame = () => {
+    setStartGame(true);
+    // forceUpdate();
   }
 
-  render() {
-    return (
+  return (
+    <>
+      <Head>
+        <title>Hoodwinked</title>
+        <meta name="description" content="AI Deception Game" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* TODO: add favicon */}
+      </Head>
       <div>
         <Sidebar 
-          playerName={this.state.playerName} 
-          setShowLogin={this.setShowLogin}  
-          gameInProgress={this.gameInProgress}
+          // playerName={playerName} 
+          setShowLogin={(value)=>setShowLogin(value)}  
+          gameInProgress={gameInProgress}
         />
         <Chat 
-          startGame={this.state.startGame}
-          setStartGame={(value)=>this.setState({startGame: value})}
-          playerName={this.state.playerName}
-          killer={this.state.killer}
+          startGame={startGame}
+          setStartGame={(value)=>setStartGame(value)}
+          playerName={playerName}
+          killer={killer}
           // Add a setter for any global variables
         />
-        {this.state.showLogin && 
+        {showLogin && 
           <Login 
-            setShowLogin={(value)=>this.setState({showLogin: value})} 
-            setStartGame={(value)=>this.setState({startGame: value})}
-            setPlayerName={(value)=>this.setState({playerName: value})}
-            setKiller={(value)=>this.setState({killer: value})}
+            setShowLogin={(value)=>setShowLogin(value)} 
+            setStartGame={callStartGame}
+            setPlayerName={(value)=>setPlayerName(value)}
+            setKiller={(value)=>setKiller(value)}
           />
         }
       </div>
-    );
-  }
-
-  startGame = async (newName, killer) => {
-    this.setState({playerName: newName});
-    this.setState({killer: killer});
-    this.setState({gameState: await fetchStartGame(newName, killer)});
-    this.setState({gameInProgress: true})
-  }
+    </>
+  );
 }

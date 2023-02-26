@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import React from 'react';
 import styles from '../styles/login.module.css';
 
@@ -9,13 +9,20 @@ export default function Login({ setShowLogin, setStartGame,
 
     // Set the name in the global state, and get rid of the login popup
     function startGame(e) {
+      console.log("begin startGame")
       e.preventDefault();
       setShowLogin(false);
-      setStartGame(true);
+      setStartGame();
       setPlayerName(inputRef.current.value);
       // TODO: Ask player if they'd like to be the killer
       setKiller(Math.floor(Math.random() * 2) == 0);
+      console.log("end startGame")
     }
+
+    // Focus on the input field when the component mounts
+    useEffect(() => {
+      inputRef.current.focus();
+    }, []);
 
   
     return (

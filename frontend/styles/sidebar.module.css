@@ -51,3 +51,8 @@
   top: 95%;
   transform: translateY(-100%);
 }
+
+.sidebar .info a {
+  color: white;
+  text-decoration: none;
+}

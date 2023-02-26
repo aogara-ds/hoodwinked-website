@@ -1,18 +1,18 @@
-import { setChatState } from '../components/chat.jsx'
-
-export function fetchStartGame (newName, killer, setChatState) {
+export default async function fetchStartGame (newName, killer) {
     const startGameURL = 'http://127.0.0.1:8000/start/'
     try {
-      const response = fetch(startGameURL, {
+      const response = await fetch(startGameURL, {
         method: 'POST',
         body: JSON.stringify({
           playerName: newName,
           killer: killer,
         }),
       });
-      const data = response.json();
-      return data.history;
+      const data = await response.json();
+      console.log(data)
+      return await data;
     } catch (err) {
+      // TODO: Handle error
       console.error(err);
     }
   }
