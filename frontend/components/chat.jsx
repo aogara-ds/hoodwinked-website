@@ -1,25 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
-import styles from '../styles/chat.module.css';
-import fetchStartGame from '../api/startGame.jsx';
+import styles from "../styles/chat.module.css";
+import { useEffect } from "react";
 
-export default function Chat(props) {
-    const [history, setHistory] = useState([]);
-    const [userInput, setUserInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const chatHistoryRef = useRef();
-    const chatInputRef = useRef();
-
-    useEffect(() => {
-        console.log('componentDidUpdate 1')
-        const { startGame, setStartGame, playerName, killer } = props;
-        if (startGame && !prevProps.startGame) {
-            console.log('if is yes')
-            setStartGame(false);
-            fetchStartGame(playerName, killer).then((response) => {
-                setHistory(response.history.split("\n\n"));
-            })
-        }
-    }, [props]);
+// Matt: I set this back to a functional component, since it doesn't need to be a class.
+export default function Chat() {
+  const [history, setHistory] = useState([]);
+  const [userInput, setUserInput] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -86,4 +72,5 @@ export default function Chat(props) {
       </div>
     </div>
   );
+}
 }

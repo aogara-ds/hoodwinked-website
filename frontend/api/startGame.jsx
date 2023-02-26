@@ -16,4 +16,4 @@ export default async function fetchStartGame (newName, killer) {
       console.error(err);
     }
   }
-  
+}
