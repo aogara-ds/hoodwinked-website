@@ -1,15 +1,18 @@
 import styles from "../styles/chat.module.css";
-import { useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // Matt: I set this back to a functional component, since it doesn't need to be a class.
 export default function Chat() {
   const [history, setHistory] = useState([]);
-  const [userInput, setUserInput] = useState('');
+  const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const chatHistoryRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (userInput.trim() === '') {
+    if (userInput.trim() === "") {
       return;
     }
 
@@ -17,21 +20,21 @@ export default function Chat() {
 
     // TODO: Send user question and history to API
 
-    setUserInput('');
+    setUserInput("");
 
     // TODO: Update history
     // await
-    setHistory([...history, 'lorem ipsum']);
+    setHistory([...history, "lorem ipsum"]);
 
     setLoading(false);
   };
 
   const handleEnter = (event) => {
-    if (event.key === 'Enter' && userInput) {
+    if (event.key === "Enter" && userInput) {
       if (!event.shiftKey && userInput) {
         handleSubmit(event);
       }
-    } else if (event.key === 'Enter') {
+    } else if (event.key === "Enter") {
       event.preventDefault();
     }
   };
@@ -72,5 +75,4 @@ export default function Chat() {
       </div>
     </div>
   );
-}
 }
