@@ -43,14 +43,13 @@ def startGame(request, bots=5):
     trio.run(game.request_bot_actions)
 
     # Request API action
-    history, action_prompt = game.request_api_action()
+    history = game.request_api_action()
 
     # Return the player's first prompt
     response_dict = {
         'game_id': game_id,
         'history': history,
         'prompt_type': 'action',
-        'prompt': action_prompt,
         'next_request': 'action',
     }
     return JsonResponse(response_dict)
