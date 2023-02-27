@@ -1,72 +1,69 @@
-import { useState, createContext, Component } from 'react';
-import Sidebar from '../components/sidebar.jsx';
-import Chat from '../components/chat.jsx';
-import Login from '../components/login.jsx';
-import axios from 'axios';
+import React, { useState } from "react";
+import Sidebar from "../components/sidebar.jsx";
+import Chat from "../components/chat.jsx";
+import Login from "../components/login.jsx";
+import Head from "next/head";
+import fetchStartGame from "../api/startGame.jsx";
 
-export default class HomePage extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showLogin: false,
-      playerName: '',
-      killer: false,
-      history: '',
-    };
-  }
+export const ShowLoginContext = React.createContext();
+export const GameStateContext = React.createContext();
 
-  render() {
-    return (
-      <div>
-        <Sidebar 
-          playerName={this.state.playerName} 
-          setShowLogin={this.setShowLogin}  
-        />
-        <Chat history={this.state.history}/>
-        {this.state.showLogin && 
-          <Login 
-            setShowLogin={this.setShowLogin} 
-            startGame={this.startGame}
-          />
-        }
-      </div>
-    );
-  }
+const defaultGameState = {
+  gameCount: 0,
+  game_id: null,
+  history: "",
+  killer: false,
+  next_request: null,
+  playerName: "",
+  prompt_type: null,
+  waiting: false,
+};
 
-  setShowLogin = (value) => {
-    this.setState({showLogin: value});
-  }
+function HomePage() {
 
-  startGame = async (newName, killer) => {
-    console.log('here we go');
-    console.log(newName);
-    this.setState({playerName: newName});
-    this.setState({killer: killer});
-    this.setState({history: await fetchStartGame(newName, killer)});
-    console.log('awaited');
-    console.log(this.state.history);
-  }
-}
+  const [showLogin, setShowLogin] = useState(false);
+  const [gameState, setGameState] = useState(defaultGameState);
 
-
-
-async function fetchStartGame (newName, killer) {
-  console.log('beginning');
-  const startGameURL = 'http://127.0.0.1:8000/start/'
-  try {
-    const response = await fetch(startGameURL, {
-      method: 'POST',
-      // credentials: 'include',
-      mode: 'cors',
-      body: JSON.stringify({
-        playerName: newName,
-        killer: killer,
-      }),
+  // Login calls this function to start a new game
+  async function startGame(playerName, killer) {
+    setGameState({
+      ...defaultGameState,
+      playerName: playerName,
+      killer: killer,
+      gameCount: gameState.gameCount + 1,
+      waiting: true
     });
-    const data = await response.json();
-    console.log('end');
-    return data.history;
-  } catch (err) {
-    console.error(err);
+
+    const newGameState = await fetchStartGame(playerName, killer);
+    // await new Promise(resolve => setTimeout(resolve, 1000));
+    // const newGameState = {history: 'test'}
+
+    setGameState({
+      ...gameState,
+      ...newGameState,
+      waiting: false
+    });
   }
+
+  return (
+    <>
+      <Head>
+        <title>Hoodwinked</title>
+        <meta name="description" content="AI Deception Game" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* TODO: add favicon */}
+      </Head>
+      <div>
+        <GameStateContext.Provider value={[gameState, setGameState]}>
+          <ShowLoginContext.Provider value={[showLogin, setShowLogin]}>
+            <Sidebar />
+            <Chat startGame={startGame} />
+            {showLogin && <Login startGame={startGame} />}
+          </ShowLoginContext.Provider>
+        </GameStateContext.Provider>
+      </div>
+    </>
+  );
 }
+
+export default HomePage;

@@ -1,5 +1,6 @@
 import openai
 import os
+import torch
 from dotenv import load_dotenv
 from transformers import GPT2Tokenizer
 from transformers.utils import logging

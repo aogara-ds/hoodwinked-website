@@ -148,7 +148,7 @@ class Game():
         """
         api_player = [p for p in self.get_active_players() if p.agent=="api"][0]
         action_prompt = self.format_prompt(api_player, self.prompts['action'])
-        return api_player.story, action_prompt
+        return api_player.story + action_prompt
     
     def store_api_action(self, action_int):
         api_player = self.get_api_player()
