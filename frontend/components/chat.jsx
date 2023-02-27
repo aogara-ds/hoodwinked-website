@@ -1,29 +1,18 @@
-import { useEffect, useState, useRef } from 'react';
-import styles from '../styles/chat.module.css';
-import fetchStartGame from '../api/startGame.jsx';
+import styles from "../styles/chat.module.css";
+import React, { useState, useEffect, useRef } from "react";
 
-export default function Chat(props) {
-    const [history, setHistory] = useState([]);
-    const [userInput, setUserInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const chatHistoryRef = useRef();
-    const chatInputRef = useRef();
+// Matt: I set this back to a functional component, since it doesn't need to be a class.
+export default function Chat() {
+  const [history, setHistory] = useState([]);
+  const [userInput, setUserInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        console.log('componentDidUpdate 1')
-        const { startGame, setStartGame, playerName, killer } = props;
-        if (startGame && !prevProps.startGame) {
-            console.log('if is yes')
-            setStartGame(false);
-            fetchStartGame(playerName, killer).then((response) => {
-                setHistory(response.history.split("\n\n"));
-            })
-        }
-    }, [props]);
+  const chatHistoryRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (userInput.trim() === '') {
+    if (userInput.trim() === "") {
       return;
     }
 
@@ -31,21 +20,21 @@ export default function Chat(props) {
 
     // TODO: Send user question and history to API
 
-    setUserInput('');
+    setUserInput("");
 
     // TODO: Update history
     // await
-    setHistory([...history, 'lorem ipsum']);
+    setHistory([...history, "lorem ipsum"]);
 
     setLoading(false);
   };
 
   const handleEnter = (event) => {
-    if (event.key === 'Enter' && userInput) {
+    if (event.key === "Enter" && userInput) {
       if (!event.shiftKey && userInput) {
         handleSubmit(event);
       }
-    } else if (event.key === 'Enter') {
+    } else if (event.key === "Enter") {
       event.preventDefault();
     }
   };
