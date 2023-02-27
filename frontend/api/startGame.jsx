@@ -1,10 +1,10 @@
-export default async function fetchStartGame(newName, killer) {
+export default async function fetchStartGame(playerName, killer) {
   const startGameURL = "http://127.0.0.1:8000/start/";
   try {
     const response = await fetch(startGameURL, {
       method: "POST",
       body: JSON.stringify({
-        playerName: newName,
+        name: playerName,
         killer: killer,
       }),
     });

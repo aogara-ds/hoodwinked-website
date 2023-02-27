@@ -1,23 +1,42 @@
 import styles from "../styles/chat.module.css";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { GameStateContext } from "../pages";
 
 export default function Chat() {
+
+  // State
   const [history, setHistory] = useState([]);
   const [userInput, setUserInput] = useState("");
-  const [loading, setLoading] = useState(false);
 
+  // References
   const chatHistoryRef = useRef(null);
   const chatInputRef = useRef(null);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (userInput.trim() === "") {
-      return;
+  // Context
+  const [gameState, setGameState] = useContext(GameStateContext);
+
+  // Start the game when waiting changes
+  useEffect(() => {
+    if (gameState.waiting == false) {
+      console.log('finished waiting!')
+      // Show the game's history
+      console.log(gameState)
+      setHistory(gameState.history.split("\n\n"))
+    } else {
+      console.log('waiting...')
     }
+  }, [gameState.waiting]);
 
-    setLoading(true);
+  // Handle the user's action submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (userInput.trim() === "") { return }
 
-    // TODO: Send user question and history to API
+    // Begin waiting
+    setGameState({
+      ...gameState,
+      waiting: true,
+    });
 
     setUserInput("");
 
@@ -25,16 +44,21 @@ export default function Chat() {
     // await
     setHistory([...history, "lorem ipsum"]);
 
-    setLoading(false);
+    // Finish waiting
+    setGameState({
+      ...gameState,
+      waiting: false,
+    });
   };
 
-  const handleEnter = (event) => {
-    if (event.key === "Enter" && userInput) {
-      if (!event.shiftKey && userInput) {
-        handleSubmit(event);
+  // Handle the enter key
+  const handleEnter = (e) => {
+    if (e.key === "Enter" && userInput) {
+      if (!e.shiftKey && userInput) {
+        handleSubmit(e);
       }
-    } else if (event.key === "Enter") {
-      event.preventDefault();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
     }
   };
 
@@ -56,7 +80,7 @@ export default function Chat() {
       </div>
       <div className={styles.input}>
         <textarea
-          disabled={loading}
+          disabled={gameState.waiting}
           onKeyDown={handleEnter}
           ref={chatInputRef}
           autoFocus={false}

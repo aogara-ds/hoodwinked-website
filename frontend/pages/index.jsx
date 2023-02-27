@@ -9,13 +9,14 @@ export const ShowLoginContext = React.createContext();
 export const GameStateContext = React.createContext();
 
 const defaultGameState = {
-  gameInProgress: false,
+  gameCount: 0,
   game_id: null,
   history: "",
   killer: false,
   next_request: null,
   playerName: "",
   prompt_type: null,
+  waiting: false,
 };
 
 function HomePage() {
@@ -23,17 +24,24 @@ function HomePage() {
   const [showLogin, setShowLogin] = useState(false);
   const [gameState, setGameState] = useState(defaultGameState);
 
+  // Login calls this function to start a new game
   async function startGame(playerName, killer) {
-    console.log("Parent startGame in HomePage")
-
-    const newGameState = await fetchStartGame(playerName, killer);
-
     setGameState({
       ...defaultGameState,
       playerName: playerName,
       killer: killer,
+      gameCount: gameState.gameCount + 1,
+      waiting: true
+    });
+
+    const newGameState = await fetchStartGame(playerName, killer);
+    // await new Promise(resolve => setTimeout(resolve, 1000));
+    // const newGameState = {history: 'test'}
+
+    setGameState({
+      ...gameState,
       ...newGameState,
-      gameInProgress: true,
+      waiting: false
     });
   }
 
