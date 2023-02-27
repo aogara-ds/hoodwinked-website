@@ -3,7 +3,7 @@ import Sidebar from "../components/sidebar.jsx";
 import Chat from "../components/chat.jsx";
 import Login from "../components/login.jsx";
 import Head from "next/head";
-import { fetchStartGame } from "../api/startGame.jsx";
+import fetchStartGame from "../api/startGame.jsx";
 
 export const ShowLoginContext = React.createContext();
 export const GameStateContext = React.createContext();
@@ -19,16 +19,18 @@ const defaultGameState = {
 };
 
 function HomePage() {
-  const [showLogin, setShowLogin] = useState(false);
 
+  const [showLogin, setShowLogin] = useState(false);
   const [gameState, setGameState] = useState(defaultGameState);
 
-  async function startGame(newName, killer) {
-    const newGameState = await fetchStartGame(newName, killer);
+  async function startGame(playerName, killer) {
+    console.log("Parent startGame in HomePage")
+
+    const newGameState = await fetchStartGame(playerName, killer);
 
     setGameState({
       ...defaultGameState,
-      playerName: newName,
+      playerName: playerName,
       killer: killer,
       ...newGameState,
       gameInProgress: true,

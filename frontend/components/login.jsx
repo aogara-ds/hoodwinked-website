@@ -2,24 +2,28 @@ import React, { useEffect, useRef, useContext } from "react";
 import styles from "../styles/login.module.css";
 import { ShowLoginContext } from "../pages";
 
-export default function Login({ startGame }) {
+export default function Login(props) {
   const [, setShowLogin] = useContext(ShowLoginContext);
 
   // Reference to the content of the input field
   const inputRef = useRef(null);
 
   // Set the name in the global state, and get rid of the login popup
-  async function startNewGame(e, startGameFunction) {
+  async function useStartGame(e) {
+
+    // Prevent page from reloading
     e.preventDefault();
 
+    // Hide the login popup
     setShowLogin(false);
 
+    // Get information from the input field
     const playerName = inputRef.current.value;
-
-    // TODO: Ask player if they'd like to be the killer
+    // TODO: Ask the user if they want to be the killer
     const killer = Math.floor(Math.random() * 2) == 0;
 
-    await startGameFunction(playerName, killer);
+    // Start game by calling function passed by the parent
+    await props.startGame(playerName, killer);
   }
 
   // Focus on the input field when the component mounts
@@ -30,7 +34,7 @@ export default function Login({ startGame }) {
   return (
     <div className={styles.loginOverlay}>
       <div className={styles.login}>
-        <form onSubmit={startGame}>
+        <form onSubmit={useStartGame}>
           {/* <h2>login to play</h2> */}
           <p>What is your name?</p>
           <label>
