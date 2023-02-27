@@ -1,7 +1,6 @@
 import styles from "../styles/chat.module.css";
 import React, { useState, useEffect, useRef } from "react";
 
-// Matt: I set this back to a functional component, since it doesn't need to be a class.
 export default function Chat() {
   const [history, setHistory] = useState([]);
   const [userInput, setUserInput] = useState("");
