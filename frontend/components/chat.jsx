@@ -15,15 +15,11 @@ export default function Chat() {
   // Context
   const [gameState, setGameState] = useContext(GameStateContext);
 
-  // Start the game when waiting changes
+  // When the API returns, display the game's history
   useEffect(() => {
     if (gameState.waiting == false) {
-      console.log('finished waiting!')
-      // Show the game's history
-      console.log(gameState)
-      setHistory(gameState.history.split("\n\n"))
-    } else {
-      console.log('waiting...')
+      // Show history
+      setHistory(gameState.history.split("\n").filter((line) => line !== ""));
     }
   }, [gameState.waiting]);
 
@@ -99,3 +95,8 @@ export default function Chat() {
     </div>
   );
 }
+
+// Second API call: HandleSubmit should call the API
+// TODO: Don't accept Enter or Send when gameState.loading is true
+// TODO: Animated loading ellipsis
+// TODO: Spacing between single \n lines

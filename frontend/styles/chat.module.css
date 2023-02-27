@@ -22,6 +22,12 @@
     height: 77.5%;  
 }
 
+.history p {
+    margin: 0; 
+    padding: 5px; 
+    margin-bottom: 20px; 
+}
+
 /* Style the input box */
 .input {
     display: flex;
