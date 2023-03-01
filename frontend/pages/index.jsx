@@ -11,7 +11,7 @@ export const GameStateContext = React.createContext();
 const defaultGameState = {
   gameCount: 0,
   game_id: null,
-  history: "",
+  history_string: "",
   killer: false,
   next_request: null,
   playerName: "",
@@ -41,7 +41,8 @@ function HomePage() {
     setGameState({
       ...gameState,
       ...newGameState,
-      waiting: false
+      waiting: false,
+      // history: newGameState.history.split("\n").filter((line) => line !== ""),
     });
   }
 
