@@ -1,4 +1,4 @@
-export default async function fetchStartGame(userAction, game_id) {
+export default async function takeAction(userAction, game_id) {
     const startGameURL = "http://127.0.0.1:8000/action/";
     try {
       const response = await fetch(startGameURL, {

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from transformers import GPT2Tokenizer
 from transformers.utils import logging
 import time
-import asyncio
+import random
 
 class GPT3():
     def __init__(self, max_tokens = 16, temperature = 1):
@@ -38,11 +38,14 @@ class GPT3():
         }
         model_string = model_dict[model]
 
+        temperature = random.random() / 2 + 0.5
+        print(f'temperature: {temperature}')
+
         # Fetch response from OpenAI API
         response = openai.Completion.create(
             model=model_string,
             prompt=self.tokenize(prompt),
-            temperature=0.8,
+            temperature= temperature,
             max_tokens=max_tokens,
             stop = stop_tokens
         )
@@ -52,12 +55,10 @@ class GPT3():
         response = response.replace('\n', '')
         return response
 
-    async def get_logprobs(self, prompt, max_tokens):
+    def get_logprobs(self, prompt, max_tokens):
         # # Rate limiting options
         # # Only one ping per 2 seconds
         # time.sleep(2)
-        # # One ping per player per 2 seconds
-        # await asyncio.sleep(2)
 
 
         # Ensure prompt is below 1024 tokens

@@ -5,11 +5,10 @@ from ..game.environment import Game
 from ..game.agent import Player
 import uuid
 import time
-import trio
 import json
 import pdb
 
-# Create your views here.
+
 def startGame(request, bots=5):
     """
     Begins a new game of Hoodwinked by:
@@ -39,8 +38,11 @@ def startGame(request, bots=5):
     api_player = Player(name=player_name, killer=killer, agent="api")
     game.load_players([api_player], bots=bots)
 
-    # Request GPT3 actions
-    trio.run(game.request_bot_actions)
+    print('startGame requests bot actions')
+
+    # Request bot actions asynchronously via threads 
+    # TODO: Silence the warning if this is working correctly
+    game.request_bot_actions()
 
     # Request API action
     history = game.request_api_action()
@@ -52,15 +54,19 @@ def startGame(request, bots=5):
         'prompt_type': 'action',
         'next_request': 'action',
     }
+
+    print('startGame finishes')
+
     return JsonResponse(response_dict)
+
 
 def takeAction(request):
     """
     Takes an action in the turn-based phase of the game. 
-    Responds with one of the following:
-        JsonResponse prompting another action
-        JsonResponse indicating game over
-        HttpStreamingResponse to begin a discussion
+    Three possible outcomes:
+        If nobody is killed and the game isn't over, JsonResponse prompting another action. 
+        If someone is killed, HttpStreamingResponse to begin a discussion of the killer's identity. 
+        If the game is over, JsonResponse indicating game over.
 
     Example URL: /action/?action_int=4&game_id=
     """
@@ -77,19 +83,76 @@ def takeAction(request):
     game.store_api_action(action_int)
 
     # Wait until all actions have been generated
-    start_time = time.time()
-    while (time.time() - start_time) < 10:
-        if game.responses_returned():
-            break
-        else:
-            time.sleep(0.1)
-    if game.responses_returned() == False:
-        raise Exception('Waited more than 10 seconds for action response')
-    
-    # Update game state based on most recent actions
-    response = game.update_state(api=True, game_id=game_id)
+    while (not game.threads_finished()):
+        pass
 
-    return response
+    # Update game state based on most recent actions
+    killed_player = game.update_state()
+
+    # Handle three possible followups to an action: new action, discussion, or game over
+    # If nobody is killed and the game isn't over, request actions
+    if killed_player == None and game.over() == False:
+        # Request GPT3 actions
+        game.request_bot_actions()
+
+        # Request API action
+        history = game.request_api_action()
+
+        # Return the player's first prompt
+        response_dict = {
+            'game_id': game_id,
+            'history': history,
+            'prompt_type': 'action',
+            'next_request': 'action',
+        }
+
+        print('action taken')
+        print(response_dict)
+
+        return JsonResponse(response_dict)
+
+    # If someone is killed, stream discussion
+    elif killed_player != None:
+        streaming_response = StreamingHttpResponse(
+            game.stream_discussion(select="pre", killed_player=killed_player)
+        )
+        # Set headers for streaming response
+        streaming_response['prompt_type'] = 'discussion'
+        streaming_response['game_id'] = game_id
+        streaming_response['prompt_type'] = 'discussion'
+        streaming_response['next_request'] = 'vote' if \
+            game.get_active_players()[-1].agent == "api" else 'discussion'
+        
+        print('discussion starts')
+        print(streaming_response)
+
+        return streaming_response
+
+    # If the game is over
+    elif game.over():
+        # Record the endgame results
+        game.endgame()
+
+        # Give a final message to the API player
+        final_message = game.killer_endgame() if game.get_api_player().killer \
+            else game.prompts['innocent_victory']    
+
+        response_dict = {
+            'game_id': game_id,
+            'history': history,
+            'prompt_type': 'game_over',
+            'prompt': final_message,
+            'next_request': 'game_over',
+        }
+
+        print('game over')
+        print(response_dict)
+
+        # TODO: Put results in the database
+        return JsonResponse(response_dict)
+    
+    else:
+        raise Exception('Unintended outcome for takeAction.')
 
 
 def makeStatement(request):
