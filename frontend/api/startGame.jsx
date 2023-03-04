@@ -9,7 +9,6 @@ export default async function fetchStartGame(playerName, killer) {
       }),
     });
     const data = await response.json();
-    console.log(data);
     return await data;
   } catch (err) {
     // TODO: Handle error

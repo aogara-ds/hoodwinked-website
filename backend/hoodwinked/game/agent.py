@@ -2,7 +2,6 @@ import random
 import re
 import math
 import time
-import trio
 
 class Player():
     def __init__(self, name, killer, agent, start_location="random"):
@@ -71,7 +70,7 @@ class Player():
         """
         self.gpt3 = gpt3
 
-    async def get_action(self, action_prompt):
+    def get_action(self, action_prompt):
         """
         Returns an integer representing a valid action based on the
         num_valid_actions argument passed into the function. 
@@ -82,7 +81,6 @@ class Player():
         print(f'getting action for {self.name}')
         # Mark state as awaiting_response
         self.awaiting_response = True
-        await trio.sleep(1)
 
         # Parse action prompt for valid actions
         action_int_list = [int(n) for n in re.findall("[0-9]", action_prompt)]
@@ -92,12 +90,12 @@ class Player():
         while valid_action == False:
             # Get action
             if self.agent == "random":
-                action_int = await self.get_random_action(action_int_list)
+                action_int = self.get_random_action(action_int_list)
             elif self.agent == "cli":
                 action_int = self.get_cli_action(
                     action_int_list, action_prompt)
             elif self.agent == "gpt3":
-                action_int = await self.get_gpt3_action(action_prompt)
+                action_int = self.get_gpt3_action(action_prompt)
 
             # Validate action
             try:
@@ -126,17 +124,18 @@ class Player():
         print(f"Please input one of the following valid inputs: {action_list}")
         return int(input())
 
-    async def get_random_action(self, action_list):
+    def get_random_action(self, action_list):
         sleep_time = int(random.random() * 5)
         print(sleep_time)
         print(f"finished {sleep_time}")
         return int(random.choice(action_list))
 
-    async def get_gpt3_action(self, action_prompt, max=False):
+    def get_gpt3_action(self, action_prompt, max=False):
         print('get_gpt3_action()')
         # Get GPT3's most likely responses
-        logprobs = await self.gpt3.get_logprobs(
-            self.story + action_prompt, max_tokens=1)
+        logprobs = self.gpt3.get_logprobs(
+            self.story + action_prompt, max_tokens=1
+        )
 
         # Only accept valid integer voting options
         option_nums = re.findall("[0-9]", action_prompt)
@@ -216,7 +215,7 @@ class Player():
         elif self.agent == "cli":
             vote_int = self.get_cli_vote(vote_prompt)
         elif self.agent == "gpt3":
-            vote_int = trio.run(self.get_gpt3_vote(vote_prompt))
+            vote_int = self.get_gpt3_vote(vote_prompt)
 
         # Return the name of the person voted for
         vote = self.decode_vote(vote_prompt, vote_int)
@@ -236,10 +235,11 @@ class Player():
         print(vote_prompt)
         return input()
 
-    async def get_gpt3_vote(self, vote_prompt):
+    def get_gpt3_vote(self, vote_prompt):
         # Get GPT3's most likely responses
-        logprobs = await self.gpt3.get_logprobs(
-            self.story + vote_prompt, max_tokens=1)
+        logprobs = self.gpt3.get_logprobs(
+            self.story + vote_prompt, max_tokens=1
+        )
 
         # Only accept valid integer voting options
         option_nums = re.findall("[0-9]", vote_prompt)

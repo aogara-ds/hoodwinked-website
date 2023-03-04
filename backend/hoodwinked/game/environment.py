@@ -3,8 +3,8 @@ from collections import Counter
 from .agent import Player
 from .gpt3 import GPT3
 import random
-import trio
 from django.http import JsonResponse, StreamingHttpResponse
+import threading
 
 
 class Game():
@@ -21,6 +21,7 @@ class Game():
         self.door_unlocked = False
         self.key_location = random.choice([a[11:] for a_list in self.location_actions.values()
                                            for a in a_list if "Search" in a])
+        self.threads = []
 
     def load_players(self, players, bots=0):
         """
@@ -91,7 +92,7 @@ class Game():
         # Play until the game ends
         while (self.killer_banished() == False) and (self.innocents_alive_in_house() > 0):
             # Get actions for each player
-            trio.run(self.get_actions)
+            self.get_actions()
 
             # Update the game state
             killed_player = self.update_state()
@@ -110,24 +111,22 @@ class Game():
         evaluation_metrics = [p.eval for p in self.players]
         return evaluation_metrics
     
-    async def get_actions(self):
+    def get_actions(self):
         """
-        Gets all actions, including API players, and awaits before returning. 
-        Doesn't work for playing on the API, we need to return after requesting. 
+        Gets all actions synchronously. Not meant to be used with API. 
         """
         players = self.get_active_players()
         action_prompts = [self.format_prompt(p, self.prompts['action']) 
                           for p in players]
-        async with trio.open_nursery() as nursery:
-            for player, prompt in zip(players, action_prompts):
-                nursery.start_soon(player.get_action, prompt)
+        for player, prompt in zip(players, action_prompts):
+            player.get_action(prompt)
     
-    async def request_bot_actions(self):
+    def request_bot_actions(self):
         """
-        Sends async requests for each GPT3 player's action, then returns. 
+        Creates threads to request actions from GPT3 players.
+        Returns before threads are complete.
+        To check if threads are complete, use self.threads_finished()
         """
-        print('get bot actions')
-
         # Get list of bots
         bots = [p for p in self.get_active_players() if p.agent not in ["api", "cli"]]
         
@@ -135,12 +134,22 @@ class Game():
         action_prompts = [self.format_prompt(p, self.prompts['action']) for p in bots]
         
         # Request actions
-        async with trio.open_nursery() as nursery:
-            for p, prompt in zip(bots, action_prompts):
-                nursery.start_soon(p.get_action, prompt)
+        for player, prompt in zip(bots, action_prompts):
+            t = threading.Thread(target=player.get_action, args=(prompt,))
+            t.start()
+            self.threads.append(t)
 
         # This should run asynchronously and return before the actions are complete. 
-        print('async return')
+        print('all threads started')
+    
+    def threads_finished(self):
+        """
+        Checks if all threads have completed. If so, clears the thread list. 
+        """
+        finished = all([not t.is_alive() for t in self.threads])
+        if finished:
+            self.threads = []
+        return finished
     
     def request_api_action(self):
         """
@@ -158,7 +167,7 @@ class Game():
         api_player.eval['num_turns'] += 1
         api_player.awaiting_response = False
 
-    def update_state(self, api=False, game_id=None):
+    def update_state(self):
         """
         Looks at the most recent action of each player
         and updates the game state. Returns the killed player
@@ -294,55 +303,8 @@ class Game():
         # Update killed player's location after other players' turn updates
         for player, new_location in location_updates.items():
             player.location = new_location
-        
-        # If the request is from a local demo or evaluation
-        if not api:
-            return killed_player
 
-        # If this request comes from the API, return an HTTP response
-        else:
-            # If nobody is killed and the game isn't over, request actions
-            if killed_player == None and self.over() == False:
-                # Request GPT3 actions
-                self.request_bot_actions()
-
-                # Request API action
-                history, action_prompt = self.request_api_action()
-
-                # Return the player's first prompt
-                response_dict = {
-                    'game_id': game_id,
-                    'history': history,
-                    'prompt_type': 'action',
-                    'prompt': action_prompt,
-                    'next_request': 'action',
-                }
-
-                return JsonResponse(response_dict)
-
-            # If someone is killed, stream discussion
-            elif killed_player != None:
-                # TODO: Maybe put a header here, if it works
-                response = StreamingHttpResponse(
-                    self.stream_discussion(select="pre", killed_player=killed_player)
-                )
-                response['prompt_type'] = 'discussion'
-                response['game_id'] = game_id
-                response['prompt_type'] = 'discussion'
-                if self.get_active_players()[-1].agent == "api":
-                    response['next_request'] = 'vote'
-                else:
-                    response['next_request'] = 'discussion'
-                return response
-
-            # If the game is over
-            elif self.over():
-                # Record the endgame results
-                return self.endgame(api=True)
-            
-            else:
-                raise Exception('Unintended outcome for takeAction.')
-
+        return killed_player
 
     def discuss(self, killed_player, discussion_steps=1):
         # Prompt each player to share a statement before the vote
@@ -492,7 +454,7 @@ class Game():
         for player in self.get_active_players():
             player.story += vote_summary
 
-    def endgame(self, api=False):
+    def endgame(self):
         # Killer banished
         if self.killer_banished():
             for player in self.get_active_players():
@@ -512,25 +474,6 @@ class Game():
             # Print the story for any cli users
             if player.agent == "cli":
                 print(player.story)
-        
-        # Return HTTP Response for an API request
-        if api:
-            # TODO: Put results in the database
-            # Give a final message to the API player
-            api_player = self.get_api_player()
-            if api_player.killer==True:
-                final_message = self.killer_endgame()
-            else:
-                final_message = self.prompts['innocent_victory']
-
-            response_dict = {
-                'game_id': game_id,
-                'history': history,
-                'prompt_type': 'game_over',
-                'prompt': final_message,
-                'next_request': 'game_over',
-            }
-            return JsonResponse(response_dict)
     
     def killer_endgame(self):
         killed_num = sum([1 for p in self.players if p.alive == False])
