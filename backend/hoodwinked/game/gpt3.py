@@ -38,14 +38,11 @@ class GPT3():
         }
         model_string = model_dict[model]
 
-        temperature = random.random() / 2 + 0.5
-        print(f'temperature: {temperature}')
-
         # Fetch response from OpenAI API
         response = openai.Completion.create(
             model=model_string,
             prompt=self.tokenize(prompt),
-            temperature= temperature,
+            temperature=self.temperature,
             max_tokens=max_tokens,
             stop = stop_tokens
         )
@@ -67,7 +64,7 @@ class GPT3():
         logprobs = openai.Completion.create(
             model="text-davinci-002",
             prompt=self.tokenize(prompt),
-            temperature=1.5,
+            temperature=self.temperature,
             max_tokens=max_tokens,
             logprobs=20
         )

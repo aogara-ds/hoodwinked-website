@@ -333,25 +333,22 @@ class Game():
         Finishes by yielding a request for either a statement or a vote. 
         """
         # Generate discussion list
-        if select=="all":
-            discussion_list = self.players()
+        active_players = self.get_active_players()
+        api_player_index = [i for i, p in enumerate(active_players) if p.agent=="api"][0]
+        if select=="pre":
+            discussion_list = active_players[:api_player_index]
+        elif select=="post":
+            discussion_list = active_players[api_player_index+1:]
         else:
-            # Get the index of the API player
-            api_player_list = [i for i, p in enumerate(self.players) if p.agent=="api"]
-            assert len(api_player_list) == 1, "There should be exactly one API player."
-            api_player_index = api_player_list[0]
-
-            # Slice the player list
-            if select=="pre":
-                discussion_list = self.players[:api_player_index]
-            elif select=="post":
-                discussion_list = self.players[api_player_index+1:]
+            discussion_list = active_players
 
         # Build the discussion log
         discussion_log = ""
         if select == "post":
             # If the API player has already made a statement, log it
-            discussion_log += statement
+            discussion_log += str(self.get_api_player().name) + ': "' 
+            discussion_log += statement.strip() + '"\n'
+            yield discussion_log
         else:
             # If this is the beginning of the discussion, log the killed player
             discussion_log += self.prompts['discussion'].format(

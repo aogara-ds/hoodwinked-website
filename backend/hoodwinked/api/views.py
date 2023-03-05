@@ -73,8 +73,10 @@ def takeAction(request):
 
     # Get parameters from query string
     request_dict = read_request(request)
-    action_int = request_dict['action_int']
+    action_int = request_dict['input']
     game_id = request_dict['game_id']
+
+    # TODO: Verify action_int is valid
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
@@ -102,11 +104,10 @@ def takeAction(request):
         response_dict = {
             'game_id': game_id,
             'history': history,
-            'prompt_type': 'action',
             'next_request': 'action',
         }
 
-        print('action taken')
+        print('requesting action with json response')
         print(response_dict)
 
         return JsonResponse(response_dict)
@@ -117,11 +118,9 @@ def takeAction(request):
             game.stream_discussion(select="pre", killed_player=killed_player)
         )
         # Set headers for streaming response
-        streaming_response['prompt_type'] = 'discussion'
         streaming_response['game_id'] = game_id
-        streaming_response['prompt_type'] = 'discussion'
         streaming_response['next_request'] = 'vote' if \
-            game.get_active_players()[-1].agent == "api" else 'discussion'
+            game.get_active_players()[-1].agent == "api" else 'statement}'
         
         print('discussion starts')
         print(streaming_response)
@@ -140,7 +139,6 @@ def takeAction(request):
         response_dict = {
             'game_id': game_id,
             'history': history,
-            'prompt_type': 'game_over',
             'prompt': final_message,
             'next_request': 'game_over',
         }
@@ -149,6 +147,7 @@ def takeAction(request):
         print(response_dict)
 
         # TODO: Put results in the database
+
         return JsonResponse(response_dict)
     
     else:
@@ -171,7 +170,7 @@ def makeStatement(request):
     # Get parameters from query string
     request_dict = read_request(request)
     game_id = request_dict['game_id']
-    statement = request_dict['statement']
+    statement = request_dict['input']
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
@@ -203,7 +202,7 @@ def makeVote(request):
     # Get parameters from query string
     request_dict = read_request(request)
     game_id = request_dict['game_id']
-    vote = request_dict['vote']
+    vote = request_dict['input']
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]

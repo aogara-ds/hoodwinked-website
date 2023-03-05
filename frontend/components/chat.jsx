@@ -1,9 +1,9 @@
 import styles from "../styles/chat.module.css";
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { GameStateContext } from "../pages";
-import takeAction from '../api/takeAction.jsx'
+import request from '../api/request.jsx'
+import readStream from '../api/readStream.jsx'
 
-// TODO: Remove history state object, use history property of GameStateContext
 
 export default function Chat() {
 
@@ -17,17 +17,6 @@ export default function Chat() {
   // Context
   const [gameState, setGameState] = useContext(GameStateContext);
 
-  // When the API returns, display the game's history
-  // useEffect(() => {
-  //   if (gameState.waiting == false) {
-  //     // Show history
-  //     setGameState({
-  //       ...gameState,
-  //       history: gameState.history.split("\n").filter((line) => line !== ""),
-  //     })
-  //   }
-  // }, [gameState.waiting]);
-
   const getIntegers = (string, afterKeyword) => {
     const regex = /\d+/g;
     const matches = string.slice(string.indexOf(afterKeyword)).match(regex);
@@ -38,29 +27,128 @@ export default function Chat() {
   const handleAction = async () => {  
     console.log('handleAction')
     
-    // If userInput is not a valid action, request a new input
+    // Parse userAction
     const userAction = parseInt(userInput)
     const possibleActions = await getIntegers(gameState.history, "Possible Actions:")
-    if (!possibleActions.includes(userAction)) {
-      const error_message = "Sorry, that's not a valid action. Please enter a number from the list above."
+
+    // TODO: Show it in the expected spot
+
+    // If userInput is a valid action, send it to the API and store response
+    if (possibleActions.includes(userAction)) {
+      console.log('handleAction: valid action')
+      const response = await request(userAction, gameState.game_id, gameState.next_request)
+
+      // Handle JSON response
+      if (response.headers.get('Content-Type') == "application/json") {
+        console.log('basic response!')
+        const newGameState = await response.json()
+        await setGameState({
+          ...gameState, 
+          ...newGameState,
+        })
+      } 
+
+      // Handle streaming response
+      else { handleStream(response, gameState.history) }
+    }
+
+    // If userInput is not a valid action, request a new input
+    else { invalidInput() }
+  }
+
+  // Display message for invalid inputs
+  const invalidInput = () => {
+    const error_message = "Sorry, that's not a valid action. Please enter a number from the list above."
+    setGameState({
+      ...gameState,
+      history: gameState.history + "\n\n" + error_message,
+    })
+  }
+
+  // Display streaming responses in gameState.history
+  // TODO: Store in another file, access history via context
+  const handleStream = async (response) => {
+    console.log('streaming response!')
+
+    // Initialize streaming variables
+    const stream = readStream(response);
+    const textDecoder = new TextDecoder();
+    var newHistory = gameState.history;
+    
+    // Display streaming discussion in gameState.history
+    for await (const bytestream of stream) {
+      const text = textDecoder.decode(bytestream)
+      newHistory += "\n\n" + text
       setGameState({
         ...gameState,
-        history: gameState.history + "\n\n" + error_message,
-        // history: [...history, error_message],
+        history: newHistory,
       })
     }
 
-    // If userInput is a valid action, send it to the API and store response
-    else {
-      console.log('handleAction: valid action')
-      const newGameState = await takeAction(userAction, gameState.game_id)
+    // Set the next request type to either statement or vote
+    if (newHistory.includes("Who do you vote to banish?")) {
+      setGameState({
+        ...gameState,
+        history: newHistory,
+        next_request: "vote",
+      })
+    } else {
+      setGameState({
+        ...gameState,
+        history: newHistory,
+        next_request: "statement",
+      })
+    }
+  }
+
+  const handleStatement = async () => {
+    console.log('handleStatement')
+
+    // Parse userStatement
+    const userStatement = userInput
+
+    // Remove the statement question from gameState.history
+    // and replace it with the user's statement
+    // TODO: Nice backspace and typing animations
+    const statement_question = gameState.history.split("\n\n")[-1]
+    var newHistory = gameState.history.replace(statement_question, userStatement)
+
+    // Make API Request
+    const response = await request(userStatement, gameState.game_id, gameState.next_request)
+
+    // Handle response
+    handleStream(response, newHistory)
+  }
+
+  const handleVote = async () => {
+    console.log('handleVote')
+
+    // Parse userVote
+    const userVote = parseInt(userInput)
+    const possibleVotes = await getIntegers(gameState.history, "Possible Votes:")
+
+    // Remove the vote question from gameState.history, no replacement
+    const vote_question = gameState.history.split("\n\n")[-1]
+    setGameState({
+      ...gameState,
+      history: gameState.history.replace(vote_question, ""),
+    })
+
+    // If userInput is a valid vote, send it to the API and store response
+    if (possibleVotes.includes(userVote)) {
+      console.log('handleVote: valid vote')
+      console.log(gameState.next_request)
+      const response = await request(userVote, gameState.game_id, gameState.next_request)
+
+      // Handle JSON response
+      const newGameState = await response.json()
       await setGameState({
         ...gameState, 
         ...newGameState,
       })
-      console.log(await gameState.history)
     }
   }
+
 
   // Handle the user's submission
   const handleSubmit = (e) => {
@@ -76,7 +164,8 @@ export default function Chat() {
 
     // Handle submission based on expected next_request
     if (gameState.next_request === "action") { handleAction() } 
-    // TODO: Handle statement and vote requests
+    else if (gameState.next_request === "statement") { handleStatement() }
+    else if (gameState.next_request === "vote") { handleVote() }
 
     // Finish waiting
     setGameState({
@@ -145,3 +234,4 @@ export default function Chat() {
 // TODO: Don't accept Enter or Send when gameState.loading is true
 // TODO: Animated loading ellipsis
 // TODO: Spacing between single \n lines
+// TODO: Focus on input box after Login
