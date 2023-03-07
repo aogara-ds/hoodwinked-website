@@ -108,9 +108,10 @@ export default function Chat() {
 
     // Remove the vote question from gameState.history, no replacement
     const vote_question = gameState.history.split("\n\n")[-1]
+    var newHistory = gameState.history.replace(vote_question, "")
     setGameState({
       ...gameState,
-      history: gameState.history.replace(vote_question, ""),
+      history: newHistory,
     })
 
     // If userInput is a valid vote, send it to the API and store response
@@ -128,8 +129,10 @@ export default function Chat() {
       // Make API Request
       const response = await request(playerName, gameState.game_id, gameState.next_request)
 
+
       // Handle JSON response
       const newGameState = await response.json()
+      console.log(await newGameState.history)
       await setGameState({
         ...gameState, 
         ...newGameState

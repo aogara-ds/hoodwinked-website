@@ -351,17 +351,22 @@ class Game():
         else:
             discussion_list = active_players
 
+        print()
+        print('during stream discussion, before any changes')
+        print(self.get_api_player().story)
+        print()
+
         # Build the discussion log
         discussion_log = ""
-        if select == "post":
-            # If the API player has already made a statement, log it
-            discussion_log += str(self.get_api_player().name) + ': "' 
-            discussion_log += statement.strip() + '"\n'
-            yield discussion_log
-        else:
+        if select == "pre":
             # If this is the beginning of the discussion, log the killed player
             discussion_log += self.prompts['discussion'].format(
                 killed_player=killed_player.name)
+            yield discussion_log
+        else:
+            # If the API player has already made a statement, log it
+            discussion_log += str(self.get_api_player().name) + ': "' 
+            discussion_log += statement.strip() + '"\n'
             yield discussion_log
 
         # Then stream statements from the list of players
@@ -375,7 +380,8 @@ class Game():
         # Store the discussion history for each player
         for player in self.get_active_players():
             player.story += discussion_log
-            player.story += self.vote_prompt()
+            if select=="pre":
+                player.story += self.vote_prompt()
         
         # Prompt an API statement or vote
         if select=="pre":

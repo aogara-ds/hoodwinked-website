@@ -165,6 +165,10 @@ def makeStatement(request):
     response['prompt_type'] = 'vote'
     response['next_request'] = 'vote'
 
+    print('discussion printing')
+    print(response)
+    print('done')
+
     return response
 
 def makeVote(request):
@@ -191,6 +195,10 @@ def makeVote(request):
     game = settings.HOODWINKED_GAMES[game_id]
     api_player = game.get_api_player()
 
+    print('story at the beginning')
+    print(api_player.story)
+    print('story at the end')
+
     # Log vote in player.votes
     api_player.votes.append(vote)
 
@@ -204,38 +212,26 @@ def makeVote(request):
     # Tally votes
     game.tally_votes()
 
-    # If the killer was banished
-    if game.killer_banished():
-        game.endgame()
+    if game.killer_banished() or api_player.banished or api_player.escaped or game.over():
+        # Finish the game
+        # TODO: Include endgame. This might screw up endgame on killer banished
         history = api_player.story
-
-
-    # TODO: Combine these if statements
-    # If the API player was falsely banished
-    elif api_player.banished:
-        # Finish the rest of the game async on the server
-
-        # Send the endgame message 
-        history = api_player.story
-
-
-    # If the API player escaped, end the game
-    elif api_player.escaped:
-        # Finish the rest of the game async on the server
-
-        # Send the endgame message 
-        history = api_player.story
+        next_request = 'game_over'
 
     # If the API player is still playing
     else:
         history = game.request_api_action()
+        next_request = 'action'
 
     # Return message to API player
     response_dict = {
         'game_id': game_id,
         'history': history,
-        'next_request': 'action',
+        'next_request': next_request,
     }
+
+    print(history)
+    print(next_request)
 
     return JsonResponse(response_dict)
 
