@@ -9,6 +9,8 @@ export default function Chat() {
 
   // State
   const [userInput, setUserInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
 
   // References
   const chatHistoryRef = useRef(null);
@@ -53,6 +55,9 @@ export default function Chat() {
           ...gameState, 
           ...newGameState,
         })
+
+        // Allow the user to type again
+        setLoading(false);
       } 
 
       // Handle streaming response
@@ -116,8 +121,11 @@ export default function Chat() {
       const newGameState = await response.json()
       await setGameState({
         ...gameState, 
-        ...newGameState,
+        ...newGameState
       })
+
+      // Allow the user to type again
+      setLoading(false);
     }
   }
 
@@ -157,6 +165,9 @@ export default function Chat() {
         next_request: "statement",
       })
     }
+
+    // Allow the user to type again
+    setLoading(false);
   }
 
   // Display message for invalid inputs
@@ -166,6 +177,7 @@ export default function Chat() {
       ...gameState,
       history: gameState.history + "\n\n" + error_message,
     })
+    setLoading(false);
   }
 
   // Handle the user's submission
@@ -178,8 +190,10 @@ export default function Chat() {
     // Begin waiting
     setGameState({
       ...gameState,
-      waiting: true,
     });
+
+    // Disable the chat input
+    setLoading(true);
 
     console.log('before choosing handler?')
     console.log(gameState.next_request)
@@ -188,14 +202,6 @@ export default function Chat() {
     if (gameState.next_request === "action") { handleAction() } 
     else if (gameState.next_request === "statement") { handleStatement() }
     else if (gameState.next_request === "vote") { handleVote() }
-
-    console.log('after choosing handler, finish waiting')
-
-    // Finish waiting
-    setGameState({
-      ...gameState,
-      waiting: false,
-    });
   };
 
   // Handle the enter key
@@ -236,7 +242,7 @@ export default function Chat() {
       </div>
       <div className={styles.input}>
         <textarea
-          disabled={gameState.waiting}
+          readOnly={loading}
           onKeyDown={handleEnter}
           ref={chatInputRef}
           autoFocus={false}
