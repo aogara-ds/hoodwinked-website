@@ -11,11 +11,10 @@ export const GameStateContext = React.createContext();
 const defaultGameState = {
   gameCount: 0,
   game_id: null,
-  history_string: "",
-  killer: false,
-  next_request: null,
   playerName: "",
-  prompt_type: null,
+  killer: false,
+  history: "",
+  next_request: null,
   waiting: false,
 };
 
@@ -52,6 +51,7 @@ function HomePage() {
         <title>Hoodwinked</title>
         <meta name="description" content="AI Deception Game" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
         {/* TODO: add favicon */}
       </Head>
       <div>

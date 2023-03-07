@@ -24,9 +24,6 @@ def startGame(request, bots=5):
     player_name = request_dict['name']
     killer = request_dict['killer']
 
-    print('player name...')
-    print(player_name)
-
     # Begin a new game
     game = Game()
 
@@ -38,10 +35,7 @@ def startGame(request, bots=5):
     api_player = Player(name=player_name, killer=killer, agent="api")
     game.load_players([api_player], bots=bots)
 
-    print('startGame requests bot actions')
-
     # Request bot actions asynchronously via threads 
-    # TODO: Silence the warning if this is working correctly
     game.request_bot_actions()
 
     # Request API action
@@ -54,8 +48,6 @@ def startGame(request, bots=5):
         'prompt_type': 'action',
         'next_request': 'action',
     }
-
-    print('startGame finishes')
 
     return JsonResponse(response_dict)
 
@@ -71,15 +63,16 @@ def takeAction(request):
     Example URL: /action/?action_int=4&game_id=
     """
 
+    print('takeAction')
+
     # Get parameters from query string
     request_dict = read_request(request)
     action_int = request_dict['input']
     game_id = request_dict['game_id']
 
-    # TODO: Verify action_int is valid
-
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
+    api_player = game.get_api_player()
 
     # Store generated action in Player object
     game.store_api_action(action_int)
@@ -91,41 +84,48 @@ def takeAction(request):
     # Update game state based on most recent actions
     killed_player = game.update_state()
 
-    # Handle three possible followups to an action: new action, discussion, or game over
-    # If nobody is killed and the game isn't over, request actions
-    if killed_player == None and game.over() == False:
-        # Request GPT3 actions
-        game.request_bot_actions()
-
-        # Request API action
-        history = game.request_api_action()
-
-        # Return the player's first prompt
-        response_dict = {
-            'game_id': game_id,
-            'history': history,
-            'next_request': 'action',
-        }
-
-        print('requesting action with json response')
-        print(response_dict)
-
-        return JsonResponse(response_dict)
-
-    # If someone is killed, stream discussion
-    elif killed_player != None:
+    # Handle the different possible outcomes
+    # If someone other than the API player is killed, stream discussion
+    if (killed_player != None) and (killed_player != api_player):
         streaming_response = StreamingHttpResponse(
             game.stream_discussion(select="pre", killed_player=killed_player)
         )
         # Set headers for streaming response
         streaming_response['game_id'] = game_id
-        streaming_response['next_request'] = 'vote' if \
-            game.get_active_players()[-1].agent == "api" else 'statement}'
+        streaming_response['next_request'] = 'statement'
         
         print('discussion starts')
+        print(streaming_response['next_request'])
         print(streaming_response)
 
         return streaming_response
+
+    # Request another action if the game isn't over, nobody was killed, and the API player didn't escape
+    elif killed_player == None and game.over() == False and api_player.escaped == False:
+        # Request GPT3 actions
+        game.request_bot_actions()
+
+        # Request API action
+        history = game.request_api_action()
+        next_request = 'action'
+    
+    # If the API player is killed
+    elif (killed_player == api_player):
+        # Finish the rest of the game async on the server
+
+        # Send the endgame message 
+        final_message = f"You were killed by {game.get_killer().name}! You lose."
+        history = api_player.story + final_message
+        next_request = 'game_over'
+    
+    # If the API player escaped
+    elif (api_player.escaped):
+        # Finish the rest of the game async on the server
+
+        # Send the endgame message 
+        history = api_player.story
+        next_request = 'game_over'
+        
 
     # If the game is over
     elif game.over():
@@ -133,25 +133,23 @@ def takeAction(request):
         game.endgame()
 
         # Give a final message to the API player
-        final_message = game.killer_endgame() if game.get_api_player().killer \
-            else game.prompts['innocent_victory']    
-
-        response_dict = {
-            'game_id': game_id,
-            'history': history,
-            'prompt': final_message,
-            'next_request': 'game_over',
-        }
-
-        print('game over')
-        print(response_dict)
-
-        # TODO: Put results in the database
-
-        return JsonResponse(response_dict)
+        # Not sure this logic makes sense
+        history = api_player.story
+        next_request = 'game_over' 
     
     else:
         raise Exception('Unintended outcome for takeAction.')
+    
+    response_dict = {
+        'game_id': game_id,
+        'history': history,
+        'next_request': next_request,
+    }
+
+    print("here's the next action requested")
+    print(next_request)
+
+    return JsonResponse(response_dict)
 
 
 def makeStatement(request):
@@ -210,6 +208,51 @@ def makeVote(request):
 
     # Log vote in player.votes
     api_player.votes.append(vote)
+
+    # Get the bot votes
+    game.get_votes()
+
+    # Wait for bot votes to be generated
+    while (not game.threads_finished()):
+        pass
+
+    # Tally votes
+    game.tally_votes()
+
+    # If the killer was banished
+    if game.killer_banished():
+        game.endgame()
+        history = api_player.story
+
+    # If the API player was falsely banished
+    if api_player.banished:
+        # Finish the rest of the game async on the server
+
+        # Send the endgame message 
+        final_message = game.prompts['banished']
+        history = api_player.story + final_message
+
+
+    # If the API player escaped, end the game
+    if api_player.escaped:
+        # Finish the rest of the game async on the server
+
+        # Send the endgame message 
+        history = api_player.story
+
+    # If the API player is still playing
+    else:
+        history = game.request_api_action()
+
+    # Return message to API player
+    response_dict = {
+        'game_id': game_id,
+        'history': history,
+        'next_request': 'action',
+    }
+
+    return JsonResponse(response_dict)
+
 
 def read_request(request):
     body_unicode = request.body.decode('utf-8')

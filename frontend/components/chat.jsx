@@ -32,6 +32,13 @@ export default function Chat() {
     const possibleActions = await getIntegers(gameState.history, "Possible Actions:")
 
     // TODO: Show it in the expected spot
+    // This will get overwritten by the next response, how do I do it right?
+    // Maybe wait for the API to return the action.
+    // var newHistory = gameState.history + userAction.toString()
+    // await setGameState({
+    //   ...gameState,
+    //   history: newHistory,
+    // })
 
     // If userInput is a valid action, send it to the API and store response
     if (possibleActions.includes(userAction)) {
@@ -56,19 +63,70 @@ export default function Chat() {
     else { invalidInput() }
   }
 
-  // Display message for invalid inputs
-  const invalidInput = () => {
-    const error_message = "Sorry, that's not a valid action. Please enter a number from the list above."
+  const handleStatement = async () => {
+    console.log('handleStatement')
+
+    // Parse userStatement
+    const userStatement = userInput
+
+    // Remove the statement question from gameState.history
+    // and replace it with the user's statement
+    // TODO: Nice backspace and typing animations
+    const statement_question = gameState.history.split("\n\n")[-1]
+    var newHistory = gameState.history.replace(statement_question, userStatement)
+
+    // Make API Request
+    const response = await request(userStatement, gameState.game_id, gameState.next_request)
+
+    // Handle response
+    handleStream(response, newHistory)
+  }
+
+  const handleVote = async () => {
+    console.log('handleVote')
+
+    // Parse userVote
+    const userVote = parseInt(userInput)
+    const possibleVotes = await getIntegers(gameState.history, "Who do you vote to banish?")
+
+
+    // Remove the vote question from gameState.history, no replacement
+    const vote_question = gameState.history.split("\n\n")[-1]
     setGameState({
       ...gameState,
-      history: gameState.history + "\n\n" + error_message,
+      history: gameState.history.replace(vote_question, ""),
     })
+
+    // If userInput is a valid vote, send it to the API and store response
+    if (possibleVotes.includes(userVote)) {
+      console.log('handleVote: valid vote')
+      console.log(gameState.next_request)
+
+      // Convert integer to player name
+      const regex = `${"Who do you vote to banish?"}[\\s\\S]*?${userVote}\\.\\s+(.*?)\\n`
+      const playerName = gameState.history.match(regex)[1]
+
+      console.log(userVote)
+      console.log(playerName)
+
+      // Make API Request
+      const response = await request(playerName, gameState.game_id, gameState.next_request)
+
+      // Handle JSON response
+      const newGameState = await response.json()
+      await setGameState({
+        ...gameState, 
+        ...newGameState,
+      })
+    }
   }
 
   // Display streaming responses in gameState.history
   // TODO: Store in another file, access history via context
   const handleStream = async (response) => {
     console.log('streaming response!')
+    const next_request = response.headers.get('next_request')
+    console.log('next_')
 
     // Initialize streaming variables
     const stream = readStream(response);
@@ -101,57 +159,18 @@ export default function Chat() {
     }
   }
 
-  const handleStatement = async () => {
-    console.log('handleStatement')
-
-    // Parse userStatement
-    const userStatement = userInput
-
-    // Remove the statement question from gameState.history
-    // and replace it with the user's statement
-    // TODO: Nice backspace and typing animations
-    const statement_question = gameState.history.split("\n\n")[-1]
-    var newHistory = gameState.history.replace(statement_question, userStatement)
-
-    // Make API Request
-    const response = await request(userStatement, gameState.game_id, gameState.next_request)
-
-    // Handle response
-    handleStream(response, newHistory)
-  }
-
-  const handleVote = async () => {
-    console.log('handleVote')
-
-    // Parse userVote
-    const userVote = parseInt(userInput)
-    const possibleVotes = await getIntegers(gameState.history, "Possible Votes:")
-
-    // Remove the vote question from gameState.history, no replacement
-    const vote_question = gameState.history.split("\n\n")[-1]
+  // Display message for invalid inputs
+  const invalidInput = () => {
+    const error_message = "Sorry, that's not a valid action. Please enter a number from the list above."
     setGameState({
       ...gameState,
-      history: gameState.history.replace(vote_question, ""),
+      history: gameState.history + "\n\n" + error_message,
     })
-
-    // If userInput is a valid vote, send it to the API and store response
-    if (possibleVotes.includes(userVote)) {
-      console.log('handleVote: valid vote')
-      console.log(gameState.next_request)
-      const response = await request(userVote, gameState.game_id, gameState.next_request)
-
-      // Handle JSON response
-      const newGameState = await response.json()
-      await setGameState({
-        ...gameState, 
-        ...newGameState,
-      })
-    }
   }
-
 
   // Handle the user's submission
   const handleSubmit = (e) => {
+    console.log('handleSubmit')
     e.preventDefault();
     if (userInput.trim() === "") { return }
     setUserInput("");
@@ -162,10 +181,15 @@ export default function Chat() {
       waiting: true,
     });
 
+    console.log('before choosing handler?')
+    console.log(gameState.next_request)
+
     // Handle submission based on expected next_request
     if (gameState.next_request === "action") { handleAction() } 
     else if (gameState.next_request === "statement") { handleStatement() }
     else if (gameState.next_request === "vote") { handleVote() }
+
+    console.log('after choosing handler, finish waiting')
 
     // Finish waiting
     setGameState({
@@ -185,14 +209,16 @@ export default function Chat() {
     }
   };
 
+  // Scroll to the bottom of the chat history
   useEffect(() => {
     const history = chatHistoryRef.current;
     history.scrollTop = history.scrollHeight;
   });
 
+  // Focus on the chat input
   useEffect(() => {
     chatInputRef.current.focus();
-  }, []);
+  }, [gameState]);
 
   const displayHistory = () => {
     if (gameState.history) {

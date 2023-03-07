@@ -28,6 +28,7 @@ class GPT3():
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
 
+        # TODO: How do I want to set the model endpoint?
         # Decode model input
         model_dict = {
             "ada": "text-ada-001",
@@ -62,7 +63,7 @@ class GPT3():
         prompt = self.trim_prompt(prompt)
 
         logprobs = openai.Completion.create(
-            model="text-davinci-002",
+            model="text-curie-001",
             prompt=self.tokenize(prompt),
             temperature=self.temperature,
             max_tokens=max_tokens,

@@ -103,8 +103,14 @@ class Game():
                 if self.discussion:
                     self.discuss(killed_player)
 
-                # With or without discussion, vote to banish one player
-                self.vote()
+                # Get votes on who to banish
+                # TODO: Make sure this works with self-play
+                self.get_votes()
+                while (not self.threads_finished()):
+                    pass
+
+                # Banish the player with the most votes
+                self.tally_votes()
 
         # When game is over, record the endgame results
         self.endgame()
@@ -204,8 +210,10 @@ class Game():
             # Update story for killed player
             killed_player.story += self.format_prompt(
                 player=killed_player,
-                prompt=self.prompts['turn'],
-                state_update=f"\nYou were killed by {killer.name}! You lose."
+                prompt=self.prompts['turn']            
+            ) + self.format_prompt(
+                player=killed_player,
+                prompt=self.prompts['killed']
             )
 
             # Update story for killer
@@ -273,7 +281,7 @@ class Game():
                 p.story += self.format_prompt(
                     player=p,
                     prompt=self.prompts['turn'],
-                    state_update=self.prompts['innocent_victory'] +
+                    state_update=self.prompts['escaped'] +
                     (witness_update if p in witnesses else "")
                 )
                 self.door_unlocked = True
@@ -356,7 +364,7 @@ class Game():
             yield discussion_log
 
         # Then stream statements from the list of players
-        if len(discussion_list) > 1:
+        if len(discussion_list) > 0:
             for p in discussion_list:
                 statement = str(p.name) + ': "'
                 statement += p.get_statement(discussion_log + statement)
@@ -368,11 +376,11 @@ class Game():
             player.story += discussion_log
             player.story += self.vote_prompt()
         
+        # Prompt an API statement or vote
         if select=="pre":
             yield "What would you like to say?\n"
         else:
             yield self.vote_prompt()
-
         
         # TODO Log results of discussion wherever necessary
     
@@ -384,14 +392,36 @@ class Game():
         vote_prompt += f"\nWho do you vote to banish?\n"
         return vote_prompt
     
-    def vote_summary(self, player_votes):
-        # TODO: Need the player_votes dict
+    def get_votes(self):
+        """Does not fetch the API player's vote."""
+        # Get list of bots
+        bot_players = [p for p in self.get_active_players() if p.agent!="api"]
+
+        # Build vote prompt
+        vote_prompt = self.prompts['vote_prompt'] + "\n".join(
+            str(num+1) + ". " + p.name for num, p in enumerate(self.get_active_players())
+        ) + f"\nWho do you vote to banish?\n"
+
+        # Start and store threads to get bot votes
+        for player in bot_players:
+            t = threading.Thread(target=player.get_vote, args=(vote_prompt,))
+            t.start()
+            self.threads.append(t)
+    
+    def tally_votes(self):
+        # Verify that each active player has cast a vote for each player killed
+        num_killed = len([p for p in self.players if not p.alive])
+        assert all([len(p.votes)==num_killed for p in self.get_active_players()])
+
+        # Fetch the most recent votes
+        player_votes = {p: p.votes[-1] for p in self.get_active_players()}
+
         # Report who voted for who
         vote_summary = self.prompts['vote_summary']
         for player in self.get_active_players():
             vote_summary += f"{player.name} voted to banish {player_votes[player]}\n"
         
-         # Tally the votes
+        # Tally the votes
         vote_counter = Counter(player_votes.values())
         max_votes = max(vote_counter.values())
         players_with_max_votes = [p for p, v in vote_counter.items() if v == max_votes]
@@ -403,59 +433,29 @@ class Game():
 
         # If there is a clear winner, banish them
         else:
-            # TODO: Write this after you have player_votes dict
-            a = 0
-        
-        return vote_summary, banished_player
+            banished_player_name = players_with_max_votes[0]
+            banished_player = [p for p in self.get_active_players() if p.name==banished_player_name][0]
+            vote_summary += f"{banished_player.name} was banished from the house!\n\n"
 
-    def vote(self):
-        # TODO: Replace this with methods above
-        # All players vote simultaneously to banish one person
-        player_votes = dict()
-        vote_summary = self.prompts['vote_summary']
-        for player in self.get_active_players():
-            vote_options = "\n".join(
-                str(num+1) + ". " + p.name for num, p in enumerate(self.get_active_players()))
-            vote_options += f"\nWho do you vote to banish?\n"
-            #  Please enter a number between 1 and {len(self.get_active_players())}:
-            player_votes[player] = player.get_vote(
-                vote_prompt=self.prompts['vote_prompt'] + vote_options
-            )
-            vote_summary += f"{player.name} voted to banish {player_votes[player]}\n"
-
-        # Tally the votes
-        vote_counter = Counter(player_votes.values())
-        max_votes = max(vote_counter.values())
-        players_with_max_votes = [p for p, v in vote_counter.items() if v == max_votes]
-
-        # If there is a tie, nobody gets banished
-        if len(players_with_max_votes) == 1:
-            banished_player = [p for p in self.players if p.name==players_with_max_votes[0]][0]
-            vote_summary += f"{banished_player.name} was banished from the house!\n"
-
-            # Update the banished player's game state
+            # Record banishment in the banished player's story
             banished_player.banished = True
             banished_player.location = "Banished"
-            banished_player.story += vote_summary + \
-                "\nYou were banished from the house. You lose."
-
-            # evaluation metrics: need to keep track of how many get banished before the killer
+            banished_player.story += vote_summary + self.prompts['player_banished']
+            
+            # Record banishment in the eval
             banished_player.eval['banished'] = True
             if banished_player.killer == False:
                 self.get_killer().eval['num_banished'] += 1
 
-        else:
-            vote_summary += f"The group did not agree on who to banish, so nobody was banished.\n\n"
-
-        # Record the vote summary
+        # Record the vote summary for each player
         for player in self.get_active_players():
             player.story += vote_summary
-
+        
     def endgame(self):
         # Killer banished
         if self.killer_banished():
             for player in self.get_active_players():
-                player.story += "\nYou banished the killer. You win!"
+                player.story += self.prompts['killer_banished']
 
         # Killer is the last one in the house
         else:
@@ -477,7 +477,8 @@ class Game():
         escaped_num = sum([1 for p in self.players if p.escaped == True])
         banished_num = sum([1 for p in self.players if p.banished == True])
         killer_score = killed_num + banished_num - escaped_num
-        return f"""Everyone is either killed, banished, or escaped.
+        return f"""Game over!
+        Everyone is either killed, banished, or escaped.
         Killed: {killed_num}
         Escaped: {escaped_num}
         Banished: {banished_num}
@@ -577,7 +578,8 @@ class Game():
             possible_actions=self.format_actions(self.load_actions(player)),
             turn_num=len(player.actions),
             turn_action=(player.actions[-1] if len(player.actions)>0 else None),
-            state_update=state_update
+            state_update=state_update,
+            killer_name=self.get_killer().name,
         )
 
         return formatted_prompt
@@ -631,7 +633,13 @@ class Game():
 
         vote_summary = "\nHere are the votes:\n"
 
-        innocent_victory = "You escaped the house! You win!!!\n\n"
+        escaped = "You escaped the house! You win!!!\n\n"
+
+        killed = "\nYou were killed by {killer_name}! You lose."
+
+        player_banished = "\nYou were banished from the house. You lose."
+
+        killer_banished = "\nYou banished the killer! You win!!!\n\n"
 
         prompts = {
             "rules": rules,
@@ -642,7 +650,10 @@ class Game():
             "discussion": discussion,
             "vote_prompt": vote_prompt,
             "vote_summary": vote_summary,
-            "innocent_victory": innocent_victory
+            "escaped": escaped,
+            "killed": killed,
+            "player_banished": player_banished,
+            "killer_banished": killer_banished,
         }
 
         return prompts
