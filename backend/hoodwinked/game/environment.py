@@ -210,7 +210,8 @@ class Game():
             # Update story for killed player
             killed_player.story += self.format_prompt(
                 player=killed_player,
-                prompt=self.prompts['turn']            
+                prompt=self.prompts['turn'],       
+                state_update=""
             ) + self.format_prompt(
                 player=killed_player,
                 prompt=self.prompts['killed']
@@ -311,7 +312,7 @@ class Game():
         # Update killed player's location after other players' turn updates
         for player, new_location in location_updates.items():
             player.location = new_location
-
+        
         return killed_player
 
     def discuss(self, killed_player, discussion_steps=1):

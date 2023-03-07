@@ -35,6 +35,8 @@ def startGame(request, bots=5):
     api_player = Player(name=player_name, killer=killer, agent="api")
     game.load_players([api_player], bots=bots)
 
+    print(f'btw killer is {game.get_killer().name}')
+
     # Request bot actions asynchronously via threads 
     game.request_bot_actions()
 
@@ -114,8 +116,7 @@ def takeAction(request):
         # Finish the rest of the game async on the server
 
         # Send the endgame message 
-        final_message = f"You were killed by {game.get_killer().name}! You lose."
-        history = api_player.story + final_message
+        history = api_player.story
         next_request = 'game_over'
     
     # If the API player escaped
@@ -142,7 +143,7 @@ def takeAction(request):
     
     response_dict = {
         'game_id': game_id,
-        'history': history,
+        'history': api_player.story,
         'next_request': next_request,
     }
 
@@ -229,8 +230,7 @@ def makeVote(request):
         # Finish the rest of the game async on the server
 
         # Send the endgame message 
-        final_message = game.prompts['banished']
-        history = api_player.story + final_message
+        history = api_player.story
 
 
     # If the API player escaped, end the game
