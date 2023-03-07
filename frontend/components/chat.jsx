@@ -45,12 +45,24 @@ export default function Chat() {
     // If userInput is a valid action, send it to the API and store response
     if (possibleActions.includes(userAction)) {
       console.log('handleAction: valid action')
+
+      // Convert integer to action name
+      const regex = `${"Possible Actions:"}[\\s\\S]*?${userAction}\\.\\s+(.*?)\\n`
+      const actionName = gameState.history.match(regex)[1]
+
+      // 
+
+
+      // Make API Request
       const response = await request(userAction, gameState.game_id, gameState.next_request)
 
       // Handle JSON response
       if (response.headers.get('Content-Type') == "application/json") {
         console.log('basic response!')
         const newGameState = await response.json()
+
+        console.log(newGameState.history)
+
         await setGameState({
           ...gameState, 
           ...newGameState,
@@ -94,7 +106,6 @@ export default function Chat() {
     const userVote = parseInt(userInput)
     const possibleVotes = await getIntegers(gameState.history, "Who do you vote to banish?")
 
-
     // Remove the vote question from gameState.history, no replacement
     const vote_question = gameState.history.split("\n\n")[-1]
     setGameState({
@@ -132,8 +143,7 @@ export default function Chat() {
   // Display streaming responses in gameState.history
   // TODO: Store in another file, access history via context
   const handleStream = async (response) => {
-    console.log('streaming response!')
-    const next_request = response.headers.get('next_request')
+    console.log('handleStream()')
     console.log('next_')
 
     // Initialize streaming variables
@@ -152,19 +162,19 @@ export default function Chat() {
     }
 
     // Set the next request type to either statement or vote
-    if (newHistory.includes("Who do you vote to banish?")) {
+    if (gameState.next_request.includes("statement")) {
       setGameState({
         ...gameState,
         history: newHistory,
         next_request: "vote",
       })
-    } else {
+    } else if (gameState.next_request.includes("action")) {
       setGameState({
         ...gameState,
         history: newHistory,
         next_request: "statement",
       })
-    }
+    } else { Exception("Invalid next_request")}
 
     // Allow the user to type again
     setLoading(false);
@@ -254,7 +264,7 @@ export default function Chat() {
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
         />
-        <button type="submit" onClick={handleSubmit}>
+        <button type="submit" onClick={handleSubmit} disabled={loading}>
           send
         </button>
       </div>

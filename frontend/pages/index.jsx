@@ -34,14 +34,11 @@ function HomePage() {
     });
 
     const newGameState = await fetchStartGame(playerName, killer);
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-    // const newGameState = {history: 'test'}
 
     setGameState({
       ...gameState,
       ...newGameState,
       waiting: false,
-      // history: newGameState.history.split("\n").filter((line) => line !== ""),
     });
   }
 

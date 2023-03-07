@@ -146,6 +146,7 @@ def makeStatement(request):
     3. Add and stream the vote prompt
 
     """
+    print('makeStatement()')
 
     # Get parameters from query string
     request_dict = read_request(request)
@@ -157,6 +158,7 @@ def makeStatement(request):
 
     # NOTE: Frontend has to print the API player's statement locally
     # Stream the rest of discussion and the vote prompt
+
     response = StreamingHttpResponse(
         game.stream_discussion(select="post", statement=statement)
     )
@@ -178,6 +180,7 @@ def makeVote(request):
     
     
     """
+    print('makeVote()')
 
     # Get parameters from query string
     request_dict = read_request(request)
@@ -206,8 +209,10 @@ def makeVote(request):
         game.endgame()
         history = api_player.story
 
+
+    # TODO: Combine these if statements
     # If the API player was falsely banished
-    if api_player.banished:
+    elif api_player.banished:
         # Finish the rest of the game async on the server
 
         # Send the endgame message 
@@ -215,7 +220,7 @@ def makeVote(request):
 
 
     # If the API player escaped, end the game
-    if api_player.escaped:
+    elif api_player.escaped:
         # Finish the rest of the game async on the server
 
         # Send the endgame message 

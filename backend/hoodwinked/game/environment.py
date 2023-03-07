@@ -595,12 +595,6 @@ class Game():
     def load_prompts(self):
         """
         Returns a dictionary of the main prompts used by the game.
-
-        The prompts are:
-            rules
-            identity_innocent
-            identity_killer
-            action
         """
 
         rules = """Game rules: You are trapped in a house with {num_opponents} other people. One person is the killer, and everybody else are the innocent people. The killer's goal is to kill all of the innocent people before they escape the house. The innocent people's goal is to find the key, unlock the door, and escape the house alive.
