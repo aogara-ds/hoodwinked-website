@@ -111,39 +111,20 @@ def takeAction(request):
         history = game.request_api_action()
         next_request = 'action'
     
-    # If the API player is killed
-    elif (killed_player == api_player):
+    elif (killed_player == api_player) or (api_player.escaped) or (game.over()):
         # Finish the rest of the game async on the server
+        # This has to include game.endgame() if game.over()
 
-        # Send the endgame message 
+        # Send the endgame message
         history = api_player.story
         next_request = 'game_over'
-    
-    # If the API player escaped
-    elif (api_player.escaped):
-        # Finish the rest of the game async on the server
-
-        # Send the endgame message 
-        history = api_player.story
-        next_request = 'game_over'
-        
-
-    # If the game is over
-    elif game.over():
-        # Record the endgame results
-        game.endgame()
-
-        # Give a final message to the API player
-        # Not sure this logic makes sense
-        history = api_player.story
-        next_request = 'game_over' 
     
     else:
         raise Exception('Unintended outcome for takeAction.')
     
     response_dict = {
         'game_id': game_id,
-        'history': api_player.story,
+        'history': history,
         'next_request': next_request,
     }
 
