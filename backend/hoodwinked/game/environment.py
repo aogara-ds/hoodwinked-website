@@ -313,6 +313,9 @@ class Game():
         for player, new_location in location_updates.items():
             player.location = new_location
         
+        if self.over():
+            self.endgame()
+        
         return killed_player
 
     def discuss(self, killed_player, discussion_steps=1):
@@ -372,6 +375,7 @@ class Game():
         # Then stream statements from the list of players
         if len(discussion_list) > 0:
             for p in discussion_list:
+                print(p.story)
                 statement = str(p.name) + ': "'
                 statement += p.get_statement(discussion_log + statement)
                 discussion_log += statement + "\n"
@@ -380,7 +384,7 @@ class Game():
         # Store the discussion history for each player
         for player in self.get_active_players():
             player.story += discussion_log
-            if select=="pre":
+            if select=="post":
                 player.story += self.vote_prompt()
         
         # Prompt an API statement or vote
@@ -418,7 +422,12 @@ class Game():
     def tally_votes(self):
         # Verify that each active player has cast a vote for each player killed
         num_killed = len([p for p in self.players if not p.alive])
-        assert all([len(p.votes)==num_killed for p in self.get_active_players()])
+        try:
+            assert all([len(p.votes)==num_killed for p in self.get_active_players()])
+        except:
+            print([p.votes for p in self.players])
+            print([p.alive for p in self.players])
+            Exception("Not all players have voted.")
 
         # Fetch the most recent votes
         player_votes = {p: p.votes[-1] for p in self.get_active_players()}
@@ -478,6 +487,16 @@ class Game():
             # Print the story for any cli users
             if player.agent == "cli":
                 print(player.story)
+        
+        # TODO: Store the evaluation dicts in the database
+    
+    async def finish_game(self):
+        # Keep playing the game until it's finished
+        eval = await self.play()
+
+        # TODO: Delete the game from django.settings
+        # Pass in game_id to the function
+
     
     def killer_endgame(self):
         killed_num = sum([1 for p in self.players if p.alive == False])

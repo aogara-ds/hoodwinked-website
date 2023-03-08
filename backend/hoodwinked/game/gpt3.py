@@ -6,6 +6,7 @@ from transformers import GPT2Tokenizer
 from transformers.utils import logging
 import time
 import random
+import re
 
 class GPT3():
     def __init__(self, max_tokens = 16, temperature = 1):
@@ -35,21 +36,32 @@ class GPT3():
             "babbage": "text-babbage-001",
             "curie": "text-curie-001",
             "davinci-001": "text-davinci-001",
-            "davinci-002": "text-davinci-002"
+            "davinci-002": "text-davinci-002",
+            "chat": "gpt-3.5-turbo"
         }
         model_string = model_dict[model]
 
+        # # Fetch response from OpenAI API
+        # response = openai.Completion.create(
+        #     model=model_string,
+        #     prompt=self.tokenize(prompt),
+        #     temperature=self.temperature,
+        #     max_tokens=max_tokens,
+        #     stop = stop_tokens
+        # )
+
+
         # Fetch response from OpenAI API
-        response = openai.Completion.create(
-            model=model_string,
-            prompt=self.tokenize(prompt),
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{'role': 'user', 'content': prompt}],
             temperature=self.temperature,
             max_tokens=max_tokens,
             stop = stop_tokens
         )
 
         # Extract and clean generated text response
-        response = response['choices'][0]['text']
+        response = response['choices'][0]['message']['content']
         response = response.replace('\n', '')
         return response
 
@@ -58,7 +70,24 @@ class GPT3():
         # # Only one ping per 2 seconds
         # time.sleep(2)
 
+        # chat = True
+        # while chat: 
+        #     response = openai.ChatCompletion.create(
+        #         model="gpt-3.5-turbo",
+        #         messages=[{'role': 'user', 'content': prompt}],
+        #         temperature=self.temperature,
+        #         max_tokens=8,
+        #         n=10
+        #     )
 
+        #     for completion in response['choices']:
+        #         completion = completion['message']['content']
+        #         print(completion)
+        #         nums = re.findall("[0-9]", completion)
+        #         for num in nums:
+        #             print(num)
+        #             return int(num)
+                
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
 

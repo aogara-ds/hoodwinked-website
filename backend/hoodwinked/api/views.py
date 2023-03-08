@@ -3,6 +3,7 @@ from django.conf import settings
 from django.http import JsonResponse, StreamingHttpResponse
 from ..game.environment import Game
 from ..game.agent import Player
+import threading
 import uuid
 import time
 import json
@@ -88,17 +89,13 @@ def takeAction(request):
 
     # Handle the different possible outcomes
     # If someone other than the API player is killed, stream discussion
-    if (killed_player != None) and (killed_player != api_player):
+    if (killed_player != None) and (killed_player != api_player) and not game.over():
         streaming_response = StreamingHttpResponse(
             game.stream_discussion(select="pre", killed_player=killed_player)
         )
         # Set headers for streaming response
         streaming_response['game_id'] = game_id
         streaming_response['next_request'] = 'statement'
-        
-        print('discussion starts')
-        print(streaming_response['next_request'])
-        print(streaming_response)
 
         return streaming_response
 
@@ -113,7 +110,9 @@ def takeAction(request):
     
     elif (killed_player == api_player) or (api_player.escaped) or (game.over()):
         # Finish the rest of the game async on the server
-        # This has to include game.endgame() if game.over()
+        t = threading.Thread(target=finish_game, args=(game_id,))
+        t.start()
+        settings.GAME_THREADS.append(t)
 
         # Send the endgame message
         history = api_player.story
@@ -156,18 +155,12 @@ def makeStatement(request):
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]
 
-    # NOTE: Frontend has to print the API player's statement locally
-    # Stream the rest of discussion and the vote prompt
-
+    # Stream discussion
     response = StreamingHttpResponse(
         game.stream_discussion(select="post", statement=statement)
     )
     response['prompt_type'] = 'vote'
     response['next_request'] = 'vote'
-
-    print('discussion printing')
-    print(response)
-    print('done')
 
     return response
 
@@ -195,10 +188,6 @@ def makeVote(request):
     game = settings.HOODWINKED_GAMES[game_id]
     api_player = game.get_api_player()
 
-    print('story at the beginning')
-    print(api_player.story)
-    print('story at the end')
-
     # Log vote in player.votes
     api_player.votes.append(vote)
 
@@ -214,6 +203,10 @@ def makeVote(request):
 
     if game.killer_banished() or api_player.banished or api_player.escaped or game.over():
         # Finish the game
+        t = threading.Thread(target=finish_game, args=(game_id,))
+        t.start()
+        game.threads.append(t)
+
         # TODO: Include endgame. This might screw up endgame on killer banished
         history = api_player.story
         next_request = 'game_over'
@@ -230,12 +223,19 @@ def makeVote(request):
         'next_request': next_request,
     }
 
-    print(history)
-    print(next_request)
-
     return JsonResponse(response_dict)
 
 
 def read_request(request):
     body_unicode = request.body.decode('utf-8')
     return dict(json.loads(body_unicode))
+
+def finish_game(game_id):
+    # Fetch game
+    game = settings.HOODWINKED_GAMES[game_id]
+
+    # Finish game and save results
+    game.play()
+
+    # Delete game
+    settings.HOODWINKED_GAMES.pop(game_id)

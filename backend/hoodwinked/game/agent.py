@@ -132,6 +132,12 @@ class Player():
 
     def get_gpt3_action(self, action_prompt, max=False):
         print('get_gpt3_action()')
+        
+        # chat = True
+        # if chat:
+        #     action = self.gpt3.get_logprobs(self.story + action_prompt, max_tokens=1)
+        #     return action
+
         # Get GPT3's most likely responses
         logprobs = self.gpt3.get_logprobs(
             self.story + action_prompt, max_tokens=1
@@ -145,22 +151,27 @@ class Player():
         if max == True:
             vote = max(option_probs, key=option_probs.get)
         else:
-            # Generate a probability mass distribution for actions
-            total_prob_mass = sum(option_probs.values())
-            scaled_option_probs = {
-                k: v / total_prob_mass for k, v in option_probs.items()}
+            try:
+                # Generate a probability mass distribution for actions
+                total_prob_mass = sum(option_probs.values())
 
-            # Sample an action from the distribution
-            rand_val = random.random()
-            total = 0
-            for k, v in sorted(scaled_option_probs.items(), key=lambda x: random.random()):
-                total += v
-                if rand_val <= total:
-                    vote = k
-                    break
+                scaled_option_probs = {
+                    k: v / total_prob_mass for k, v in option_probs.items()}
+
+                # Sample an action from the distribution
+                rand_val = random.random()
+                total = 0
+                for k, v in sorted(scaled_option_probs.items(), key=lambda x: random.random()):
+                    total += v
+                    if rand_val <= total:
+                        vote = k
+                        break
+            except: 
+                vote = random.choice(option_nums)
 
         # Return the most likely token among the valid voting options
         vote = int(vote)
+        print(vote)
         return vote
     
     def store_api_action(self, action_prompt, action_int):
@@ -220,6 +231,9 @@ class Player():
         # Return the name of the person voted for
         vote = self.decode_vote(vote_prompt, vote_int)
 
+        print('decoded vote')
+        print(vote)
+
         # Record for eval
         self.votes.append(vote)
         self.witness_during_vote.append(self.witness)
@@ -236,6 +250,13 @@ class Player():
         return input()
 
     def get_gpt3_vote(self, vote_prompt):
+
+        # chat = True
+        # if chat:
+        #     chat_prompt = "You must respond with a single integer. The integer corresponds to the player in the numbered list that you would like to vote to banish. You must vote for a single player, and you can only do so by responding with a single integer. Thank you."
+        #     vote = self.gpt3.get_logprobs(self.story + vote_prompt + chat_prompt, max_tokens=1)
+        #     return vote
+        
         # Get GPT3's most likely responses
         logprobs = self.gpt3.get_logprobs(
             self.story + vote_prompt, max_tokens=1
@@ -247,6 +268,9 @@ class Player():
             num, float('-inf')) for num in option_nums}
         top_option = max(option_probs, key=option_probs.get)
 
+        print('option probs')
+        print(option_probs)
+
         # Return the most likely token among the valid voting options
         return top_option
 
@@ -254,11 +278,15 @@ class Player():
         # Build a dictionary mapping vote numbers to player names
         voting_options = dict()
         option_nums = re.findall("[0-9]", vote_prompt)
+        print(option_nums)
         for num in option_nums:
             start_idx = vote_prompt.find(num)+3
             end_idx = vote_prompt[start_idx:].find('\n') + start_idx
             end_idx = len(vote_prompt) if end_idx < start_idx else end_idx
+            # TODO: Key as int vs string causes problems. Currently string.
             voting_options[num] = vote_prompt[start_idx:end_idx]
+        
+        print(voting_options)
 
         # Return the name that was voted for
         return voting_options[vote_int]
