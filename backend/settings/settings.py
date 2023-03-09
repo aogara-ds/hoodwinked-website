@@ -132,5 +132,9 @@ HOODWINKED_GAMES = dict()
 # Create a list of game threads
 GAME_THREADS = []
 
-CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
-CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = [
+    'localhost:3000', 
+    'https://hoodwinked.ai', 
+    'https://hoodwinked.vercel.app'
+]
