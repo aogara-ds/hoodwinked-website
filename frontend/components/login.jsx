@@ -20,8 +20,7 @@ export default function Login(props) {
     // Get information from the input field
     const playerName = inputRef.current.value;
     // TODO: Ask the user if they want to be the killer
-    // const killer = Math.floor(Math.random() * 2) == 0;
-    const killer = true;
+    const killer = Math.floor(Math.random() * 2) == 0;
 
     // Start game by calling function passed by the parent
     await props.startGame(playerName, killer);
