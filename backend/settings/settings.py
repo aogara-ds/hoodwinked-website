@@ -138,3 +138,8 @@ CORS_ORIGIN_WHITELIST = [
     'https://hoodwinked.ai', 
     'https://hoodwinked.vercel.app'
 ]
+CSRF_TRUSTED_ORIGINS = [
+    'localhost:3000', 
+    'https://hoodwinked.ai', 
+    'https://hoodwinked.vercel.app'
+]
