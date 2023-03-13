@@ -136,12 +136,10 @@ GAME_THREADS = []
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = [
-    'localhost:3000', 
     'https://hoodwinked.ai', 
     'https://hoodwinked.vercel.app'
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'localhost:3000', 
     'https://hoodwinked.ai', 
     'https://hoodwinked.vercel.app'
 ]
