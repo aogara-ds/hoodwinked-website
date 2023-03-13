@@ -13,6 +13,14 @@
     z-index: 999;
 }
 
+.login h1 {
+    font-weight: normal;
+    padding: 0px;
+    padding-bottom: 0px;
+    margin: 0;
+    font-size: 2.5vw
+}
+
 /* Style the form input */
 .login input {
     background-color: black;

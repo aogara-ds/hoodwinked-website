@@ -35,8 +35,8 @@ export default function Login(props) {
     <div className={styles.loginOverlay}>
       <div className={styles.login}>
         <form onSubmit={useStartGame}>
-          {/* <h2>login to play</h2> */}
-          <p>What is your name?</p>
+          <h1 styles={styles.h1}>hoodwinked</h1>
+          <p>enter your name to play:</p>
           <label>
             <input type="text" ref={inputRef} />
           </label>

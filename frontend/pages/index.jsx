@@ -20,7 +20,7 @@ const defaultGameState = {
 
 function HomePage() {
 
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(true);
   const [gameState, setGameState] = useState(defaultGameState);
 
   // Login calls this function to start a new game

@@ -25,16 +25,10 @@ function Sidebar() {
 }
 
 function startGameButton(gameInProgress, setShowLogin) {
-  let text = "";
-  if (gameInProgress) {
-    text = "new game";
-  } else {
-    text = "start game";
-  }
   return (
     <div>
       <p className={styles.option} onClick={() => setShowLogin(true)}>
-        {text}
+        new game
       </p>
     </div>
   );
