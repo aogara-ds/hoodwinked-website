@@ -4,7 +4,6 @@ import { GameStateContext } from "../pages";
 import request from '../api/request.jsx'
 import readStream from '../api/readStream.jsx'
 
-
 export default function Chat() {
 
   // State
@@ -241,10 +240,21 @@ export default function Chat() {
 
   const displayHistory = () => {
     if (gameState.history) {
-      const history_list = gameState.history.split("\n").filter((line) => line !== "")
-      return history_list.map((paragraph, index) => (
-        <p key={index}>{paragraph}</p>
-      ));
+      const message_blocks = gameState.history.split("\n\n").filter((block) => block !== "");
+      return message_blocks.map((block, index) => {
+        const paragraphs = block.split("\n").filter((paragraph) => paragraph !== "");
+        const listRegex = /^\d+\./;
+        return (
+          <div key={index} className={styles["message-block"]}>
+            {paragraphs.map((paragraph, index) => {
+              if (listRegex.test(paragraph)) {
+                return <li key={index} style={{ marginLeft: "1rem" }}>{paragraph.slice(2)}</li>;
+              }
+              return <p key={index}>{paragraph}</p>;
+            })}
+          </div>
+        );
+      });
     }
   }
 

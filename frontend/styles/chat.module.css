@@ -69,3 +69,22 @@
 .input button:active {
     background: #505050;
 }
+
+.message-block {
+    background-color: #1e1e1e;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.message-block:hover {
+    background-color: #2e2e2e;
+}
+
+.message-block p, .message-block li {
+    margin: 0.5rem 0;
+}
+
+.message-block li {
+    list-style: decimal;
+}
