@@ -29,17 +29,22 @@ def startGame(request, bots=5):
     game = Game()
 
     # Store the game
+    print('store it')
     game_id = str(uuid.uuid4())
     settings.HOODWINKED_GAMES[game_id] = game
     
     # Load players into the game
+    print('load it')
     api_player = Player(name=player_name, killer=killer, agent="api")
     game.load_players([api_player], bots=bots)
 
     print(f'btw killer is {game.get_killer().name}')
+    print('bot actions')
 
     # Request bot actions asynchronously via threads 
     game.request_bot_actions()
+
+    print('api actions')
 
     # Request API action
     history = game.request_api_action()
@@ -51,6 +56,8 @@ def startGame(request, bots=5):
         'prompt_type': 'action',
         'next_request': 'action',
     }
+
+    print('return response')
 
     return JsonResponse(response_dict)
 
