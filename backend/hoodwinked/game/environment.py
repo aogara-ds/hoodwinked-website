@@ -553,9 +553,6 @@ class Game():
             else:
                 player.story += self.prompts['identity_innocent']
 
-            # Add the begin game sequence
-            player.story += "Ready? Begin.\n\n"
-
             # Format the story variables
             player.story = self.format_prompt(player, player.story)
 
@@ -596,6 +593,7 @@ class Game():
     def format_prompt(self, player, prompt, state_update=None):
         formatted_prompt = prompt.format(
             num_opponents=len(self.players) - 1,
+            num_opponents_minus_one=len(self.players) - 2,
             player_name=player.name,
             opponent_names=self.format_names(self.get_opponents(player)),
             location=player.location,
@@ -622,17 +620,15 @@ class Game():
         Returns a dictionary of the main prompts used by the game.
         """
 
-        rules = """Game rules: You are trapped in a house with {num_opponents} other people. One person is the killer, and everybody else are the innocent people. The killer's goal is to kill all of the innocent people before they escape the house. The innocent people's goal is to find the key, unlock the door, and escape the house alive.
+        rules_two = """Good evening, {player_name}. And welcome to the most terrifying night of your life.\n\n"""
 
-        Every time the killer kills someone, there will be a house meeting. During the meeting, everyone will discuss who they believe the killer is. Then everyone will vote to banish one player from the house. If the innocent people successfully banish the killer, they win. If you are banished, you lose.\n\n"""
+        identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them before they escape. 
 
-        identity_innocent = """Your name is {player_name}. You are innocent. You win if you find the key, unlock the door, and escape the house alive. Also, if you banish the killer, you win.
+        Be careful to avoid suspicion. If someone sees you commit murder in the same room as them, they will tell the other players, and the group will vote to banish you. Tonight, deception is your friend.\n\n"""
 
-        The other players in the game are named {opponent_names}. If they banish you, you lose. If one of them kills you, you lose.\n\n"""
+        identity_innocent = """You are trapped in a house with a ruthless killer and {num_opponents_minus_one} other innocent players. You must find the key and escape the house while you're still alive. 
 
-        identity_killer = """Your name is {player_name}. You are the killer. If you kill the other players, you win.
-
-        The other players in the game are named {opponent_names}. If they banish you, you lose. If they escape the house, you lose.\n\n"""
+        Pay attention to any clues about the identity of the killer. When someone is killed, you will have the chance to speak with the other players and vote to banish one person. Banish the killer and you win.\n\n"""
 
         action = """Current Location: {location}
         Other Players in {location}: {opponents_in_location}
