@@ -20,6 +20,7 @@ def startGame(request, bots=5):
 
     Example URL: /start/?player_name=Aidan&killer=True
     """
+    print('deh')
     # Get parameters from query string
     request_dict = read_request(request)
     player_name = request_dict['name']
