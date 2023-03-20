@@ -620,7 +620,7 @@ class Game():
         Returns a dictionary of the main prompts used by the game.
         """
 
-        rules_two = """Good evening, {player_name}. And welcome to the most terrifying night of your life.\n\n"""
+        rules = """Good evening, {player_name}. And welcome to the most terrifying night of your life.\n\n"""
 
         identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them before they escape. 
 
