@@ -88,8 +88,10 @@ export default function Chat() {
     // Remove the statement question from gameState.history
     // and replace it with the user's statement
     // TODO: Nice backspace and typing animations
-    const statement_question = gameState.history.split("\n\n")[-1]
-    var newHistory = gameState.history.replace(statement_question, userStatement)
+    const statement_question = gameState.history.split("\n\n").pop()
+    console.log('statement question')
+    console.log(statement_question)
+    var newHistory = gameState.history.replace(statement_question, '')
 
     // Make API Request
     const response = await request(userStatement, gameState.game_id, gameState.next_request)
@@ -144,14 +146,13 @@ export default function Chat() {
 
   // Display streaming responses in gameState.history
   // TODO: Store in another file, access history via context
-  const handleStream = async (response) => {
+  const handleStream = async (response, newHistory) => {
     console.log('handleStream()')
     console.log('next_')
 
     // Initialize streaming variables
     const stream = readStream(response);
     const textDecoder = new TextDecoder();
-    var newHistory = gameState.history;
     
     // Display streaming discussion in gameState.history
     for await (const bytestream of stream) {
@@ -239,6 +240,7 @@ export default function Chat() {
   }, [gameState]);
 
   const displayHistory = () => {
+    console.log(gameState.history);
     if (gameState.history) {
       const message_blocks = gameState.history.split("\n\n").filter((block) => block !== "");
       return message_blocks.map((block, index) => {
