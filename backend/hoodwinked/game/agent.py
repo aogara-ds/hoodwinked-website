@@ -252,7 +252,7 @@ class Player():
         print(vote_prompt)
         return input()
 
-    def get_gpt3_vote(self, vote_prompt):
+    def get_gpt3_vote(self, vote_prompt, max=False):
 
         vote_dict = self.extract_list_items(vote_prompt)
         
@@ -261,13 +261,30 @@ class Player():
             self.story + vote_prompt, vote_dict
         )
 
-        top_option = max(option_probs, key=option_probs.get)
+        if max == True:
+            vote = max(option_probs, key=option_probs.get)
+        else:
+            try:
+                # Sample an action from the distribution
+                rand_val = random.random()
+                total = 0
+                for k, v in sorted(option_probs.items(), key=lambda x: random.random()):
+                    total += v
+                    if rand_val <= total:
+                        vote = k
+                        break
+            except: 
+                print('broke here')
+                vote = random.choice(option_probs.keys())
+
+        vote = max(option_probs, key=option_probs.get)
 
         print('option probs')
         print(option_probs)
+        print(vote)
 
         # Return the most likely token among the valid voting options
-        return top_option
+        return vote
 
     def decode_vote(self, vote_prompt, vote_int):
         print('decode vote')
