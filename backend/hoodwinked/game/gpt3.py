@@ -82,7 +82,7 @@ class GPT3():
             if iters == max_iters:
                 votes = {k: 1 for k in action_dict.keys()}
         
-        probs = {k: np.exp(v) / sum(np.exp(votes.values())) for k, v in votes.items()}
+        probs = {k: np.exp(v) / sum(np.exp(np.array(votes.values()))) for k, v in votes.items()}
 
         return probs
     
