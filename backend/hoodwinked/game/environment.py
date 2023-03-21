@@ -561,6 +561,8 @@ class Game():
             player.story = self.format_prompt(player, player.story)
 
     def load_actions(self, player):
+        if not player.alive: return []
+
         # Begin with the standard actions for the player's location
         actions = [a for a in self.location_actions[player.location]]
 
