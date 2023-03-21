@@ -14,11 +14,11 @@ function Sidebar() {
         {startGameButton(gameInProgress, setShowLogin)}
       </div>
       <div className={styles.info}>
-        <p className={styles.option}>about</p>
+        <p className={styles.option}><a href="https://docs.google.com/document/d/1671h6NG9CpXYWrccapQBlAyPl99Qsjyl6eeslyoLlnI/edit?usp=sharing">about</a></p>
         <p className={styles.option}>
           <a href="https://github.com/aogara-ds/hoodwinked">github</a>
         </p>
-        <p className={styles.option}>contact</p>
+        <p className={styles.option}><a href="mailto:aidanogara623@gmail.com">contact</a></p>
       </div>
     </div>
   );
