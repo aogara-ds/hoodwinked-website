@@ -89,3 +89,52 @@
 .message-block li {
     list-style: decimal;
 }
+
+
+@media only screen and (max-width: 1290px) {
+    /* Modify the login popup window */
+    .window {
+        width: 100%;
+        left: 0%;
+    }
+
+    .history {
+        font-size: 3vw;
+        left: 0%;
+        top: 30px;
+        width: 90%;
+        height: 77.5%;  
+        padding: 5%;
+        /* padding: 5%; */
+    }
+
+    /* Style the input box */
+    .input {
+        width: 80%;
+        left: 5%;
+        right: 5%;
+        padding: 5%;
+        top: 85%;
+        height: 5%;
+    }
+
+    /* Style the input field */
+    .input textarea {
+        height: 100%;
+        padding: 0px;
+        font-size: 3vw;
+        line-height: 100%;
+    }
+
+    /* Style the send button */
+    .input button {
+        padding: 10px;
+        cursor: pointer;
+        font-size: 3vw;
+        margin-left: 2.5%;
+    }
+
+    .message-block {
+        padding: 1rem;
+    }
+}

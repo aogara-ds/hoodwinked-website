@@ -7,10 +7,11 @@
     background-color: black;
     color: white;
     font-family: 'Courier New', monospace;
-    width: 30%;
+    width: 500px;
     padding: 2.5%;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     z-index: 999;
+    font-size: 16px;
 }
 
 .login h1 {
@@ -18,7 +19,7 @@
     padding: 0px;
     padding-bottom: 0px;
     margin: 0;
-    font-size: 2.5vw
+    font-size: 24px;
 }
 
 /* Style the form input */
@@ -58,7 +59,8 @@
     border: 0;
     padding: 10px;
     padding-right: 0px;
-    text-align: right;
+    width: 100%;
+    text-align: center;
     cursor: pointer;
     text-decoration: underline;
     display: table-cell;
@@ -88,6 +90,32 @@
     opacity: 0.5;
 }
 
-/* To use the overlay you will need to add the class 'login-popup-overlay' to a div and make sure it's parent is the body and it's below the login-popup div in the HTML */
+@media only screen and (max-width: 1290px) {
+    /* Modify the login popup window */
+    .login {
+        width: 70%;
+        padding: 5%;
+        font-size: 3vw;
+    }
 
-/* You will also need to add the class 'login-popup' to the login-popup div */
+    .login h1 {
+        font-size: 6vw;
+    }
+    
+    /* Modify the form input */
+    .login input {
+        width: 100%;
+        margin-bottom: 5%;
+        font-size: 3vw;
+    }
+    
+    /*Modify the disclaimer*/
+    .login disclaimer {
+        font-size: 3vw;
+    }
+    
+    /* Modify the submit button */
+    .login button {
+        padding: 5%;
+    }
+}
