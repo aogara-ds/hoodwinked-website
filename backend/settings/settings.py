@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'hoodwinked'
 ]
 
 MIDDLEWARE = [
@@ -199,7 +200,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Database settings
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'hoodwinked_db',
         'USER': 'user',
         'PASSWORD': os.getenv('DB_PASSWORD'),
