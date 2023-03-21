@@ -115,12 +115,17 @@ def takeAction(request):
         history = game.request_api_action()
         next_request = 'action'
     
-    elif (killed_player == api_player) or (api_player.escaped) or (game.over()):
+    elif (killed_player == api_player) or (api_player.escaped):
         # Finish the rest of the game async on the server
         t = threading.Thread(target=finish_game, args=(game_id,))
         t.start()
         settings.GAME_THREADS.append(t)
 
+        # Send the endgame message
+        history = api_player.story
+        next_request = 'game_over'
+
+    elif game.over():
         # Send the endgame message
         history = api_player.story
         next_request = 'game_over'
