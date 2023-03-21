@@ -54,13 +54,14 @@ class GPT3():
         response = response.replace('\n', '')
         return response
 
-    def get_probs(self, prompt, action_dict, max_tokens=1, iters=1):
+    def get_probs(self, prompt, action_dict, max_tokens=1, n=1, max_iters=5):
 
         prompt = self.trim_prompt(prompt)
         votes = {k: 0 for k in action_dict.keys()}
 
         print(action_dict)
 
+        iters = 0
         while sum(votes.values()) == 0:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
@@ -76,6 +77,10 @@ class GPT3():
                 for num, action in action_dict.items():
                     if (str(num) in completion) or (action in completion):
                         votes[num] += 1
+
+            iters += 1
+            if iters == max_iters:
+                votes = {k: 1 for k in action_dict.keys()}
         
         probs = {k: np.exp(v) / sum(votes.values()) for k, v in votes.items()}
 
