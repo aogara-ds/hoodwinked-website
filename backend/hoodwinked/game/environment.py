@@ -389,7 +389,7 @@ class Game():
         
         # Prompt an API statement or vote
         if select=="pre":
-            yield "What would you like to say?\n"
+            yield "\nWhat would you like to say?\n"
         else:
             yield self.vote_prompt()
         
@@ -601,6 +601,7 @@ class Game():
                 self.get_opponents_in_location(player)),
             possible_actions=self.format_actions(self.load_actions(player)),
             turn_num=len(player.actions),
+            next_turn_num=len(player.actions) + 1,
             turn_action=(player.actions[-1] if len(player.actions)>0 else None),
             state_update=state_update,
             killer_name=self.get_killer().name,
@@ -630,7 +631,8 @@ class Game():
 
         Pay attention to any clues about the identity of the killer. When someone is killed, you will have the chance to speak with the other players and vote to banish one person. Banish the killer or escape the house and you win.\n\n"""
 
-        action = """Current Location: {location}
+        action = """Turn #{next_turn_num}
+        Current Location: {location}
         Other Players in {location}: {opponents_in_location}
         Possible Actions:{possible_actions}\n
         Which action would you like to take?
