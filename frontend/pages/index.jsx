@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "../components/sidebar.jsx";
+import Topbar from "../components/topbar.jsx";
 import Chat from "../components/chat.jsx";
 import Login from "../components/login.jsx";
 import Head from "next/head";
@@ -55,6 +56,7 @@ function HomePage() {
         <GameStateContext.Provider value={[gameState, setGameState]}>
           <ShowLoginContext.Provider value={[showLogin, setShowLogin]}>
             <Sidebar />
+            <Topbar />
             <Chat startGame={startGame} />
             {showLogin && <Login startGame={startGame} />}
           </ShowLoginContext.Provider>

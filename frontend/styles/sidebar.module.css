@@ -1,3 +1,9 @@
+@media only screen and (max-width: 1290px) {
+  .sidebar {
+    display: none;
+  }
+}
+
 .sidebar {
     background-color: black;
     color: white;
@@ -54,10 +60,4 @@
 .sidebar .info a {
   color: white;
   text-decoration: none;
-}
-
-@media only screen and (max-width: 1290px) {
-  .sidebar {
-    display: none;
-  }
 }
