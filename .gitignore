@@ -175,3 +175,4 @@ jspm_packages
 .next
 
 /out
+/.vscode
