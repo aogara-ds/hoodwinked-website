@@ -68,7 +68,7 @@ class GPT3():
                 messages=[{'role': 'user', 'content': prompt}],
                 temperature=self.temperature,
                 max_tokens=max_tokens,
-                n=iters
+                n=n
             )
 
             for completion_dict in response['choices']:
