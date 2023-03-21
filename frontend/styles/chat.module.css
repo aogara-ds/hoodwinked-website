@@ -140,3 +140,10 @@
         padding: 1rem;
     }
 }
+
+@media only screen and (max-width: 1290px) {
+    .window {
+      height: 100% - 20vw;
+      top: 20vw;
+    }
+  }
