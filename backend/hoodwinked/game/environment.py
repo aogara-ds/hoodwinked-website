@@ -475,7 +475,7 @@ class Game():
 
         # Killer is the last one in the house
         else:
-            self.get_killer().story +=  self.killer_endgame()
+            self.get_killer().story += self.killer_endgame()
 
         # Finalize evaluation dicts
         for player in self.players:

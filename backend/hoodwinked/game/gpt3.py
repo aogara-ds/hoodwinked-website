@@ -7,6 +7,8 @@ from transformers.utils import logging
 import time
 import random
 import re
+import math
+import numpy as np
 
 class GPT3():
     def __init__(self, max_tokens = 16, temperature = 1):
@@ -28,8 +30,8 @@ class GPT3():
 
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
-
-        # TODO: How do I want to set the model endpoint?
+        
+        # TODO: Flexibly support different endpoints
         # Decode model input
         model_dict = {
             "ada": "text-ada-001",
@@ -40,16 +42,6 @@ class GPT3():
             "chat": "gpt-3.5-turbo"
         }
         model_string = model_dict[model]
-
-        # # Fetch response from OpenAI API
-        # response = openai.Completion.create(
-        #     model=model_string,
-        #     prompt=self.tokenize(prompt),
-        #     temperature=self.temperature,
-        #     max_tokens=max_tokens,
-        #     stop = stop_tokens
-        # )
-
 
         # Fetch response from OpenAI API
         response = openai.ChatCompletion.create(
@@ -65,41 +57,32 @@ class GPT3():
         response = response.replace('\n', '')
         return response
 
-    def get_logprobs(self, prompt, max_tokens):
-        # # Rate limiting options
-        # # Only one ping per 2 seconds
-        # time.sleep(2)
+    def get_probs(self, prompt, action_dict, max_tokens=10, iters=1):
 
-        # chat = True
-        # while chat: 
-        #     response = openai.ChatCompletion.create(
-        #         model="gpt-3.5-turbo",
-        #         messages=[{'role': 'user', 'content': prompt}],
-        #         temperature=self.temperature,
-        #         max_tokens=8,
-        #         n=10
-        #     )
-
-        #     for completion in response['choices']:
-        #         completion = completion['message']['content']
-        #         print(completion)
-        #         nums = re.findall("[0-9]", completion)
-        #         for num in nums:
-        #             print(num)
-        #             return int(num)
-                
-        # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
+        votes = {k: 0 for k in action_dict.keys()}
 
-        logprobs = openai.Completion.create(
-            model="text-curie-001",
-            prompt=self.tokenize(prompt),
-            temperature=self.temperature,
-            max_tokens=max_tokens,
-            logprobs=20
-        )
-        logprobs = logprobs['choices'][0]['logprobs']['top_logprobs'][0]
-        return logprobs
+        print(action_dict)
+
+        while sum(votes.values()) == 0:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{'role': 'user', 'content': prompt}],
+                temperature=self.temperature,
+                max_tokens=max_tokens,
+                n=iters
+            )
+
+            for completion_dict in response['choices']:
+                completion = completion_dict['message']['content']
+                print(completion)
+                for num, action in action_dict.items():
+                    if (str(num) in completion) or (action in completion):
+                        votes[num] += 1
+        
+        probs = {k: np.exp(v) / sum(votes.values()) for k, v in votes.items()}
+
+        return probs
     
     def trim_prompt(self, prompt):
         # Ignore the tokenizer warning, that's what we're fixing

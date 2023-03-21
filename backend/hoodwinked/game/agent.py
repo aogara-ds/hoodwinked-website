@@ -2,6 +2,8 @@ import random
 import re
 import math
 import time
+import pdb
+import re
 
 class Player():
     def __init__(self, name, killer, agent, start_location="random"):
@@ -129,45 +131,41 @@ class Player():
         print(sleep_time)
         print(f"finished {sleep_time}")
         return int(random.choice(action_list))
+    
+    def extract_list_items(self, string):
+        pattern = r'(\d+)\.\s+(.*)'
+        list_items = {}
+        for match in re.finditer(pattern, string):
+            num = int(match.group(1))
+            content = match.group(2).strip()
+            list_items[num] = content
+        return list_items
 
     def get_gpt3_action(self, action_prompt, max=False):
         print('get_gpt3_action()')
-        
-        # chat = True
-        # if chat:
-        #     action = self.gpt3.get_logprobs(self.story + action_prompt, max_tokens=1)
-        #     return action
+
+        action_dict = self.extract_list_items(action_prompt)
 
         # Get GPT3's most likely responses
-        logprobs = self.gpt3.get_logprobs(
-            self.story + action_prompt, max_tokens=1
+        option_probs = self.gpt3.get_probs(
+            self.story + action_prompt, action_dict
         )
-
-        # Only accept valid integer voting options
-        option_nums = re.findall("[0-9]", action_prompt)
-        option_probs = {num: math.exp(logprobs.get(
-            num, float('-inf'))) for num in option_nums}
 
         if max == True:
             vote = max(option_probs, key=option_probs.get)
         else:
             try:
-                # Generate a probability mass distribution for actions
-                total_prob_mass = sum(option_probs.values())
-
-                scaled_option_probs = {
-                    k: v / total_prob_mass for k, v in option_probs.items()}
-
                 # Sample an action from the distribution
                 rand_val = random.random()
                 total = 0
-                for k, v in sorted(scaled_option_probs.items(), key=lambda x: random.random()):
+                for k, v in sorted(option_probs.items(), key=lambda x: random.random()):
                     total += v
                     if rand_val <= total:
                         vote = k
                         break
             except: 
-                vote = random.choice(option_nums)
+                print('broke here')
+                vote = random.choice(option_probs.keys())
 
         # Return the most likely token among the valid voting options
         vote = int(vote)
@@ -185,12 +183,17 @@ class Player():
         Given an action prompt and the integer number of an action,
         returns the text description of that action.
         """
-        start_description_idx = action_prompt.find(str(action_int)) + 2
+        print('decoding action')
+        print(action_int)
+        print(action_prompt)
+        
+        start_description_idx = action_prompt.find(str(action_int) + ". ") + 2
         end_description_idx = action_prompt[start_description_idx:].find(
             '\n') + start_description_idx
         action_text = action_prompt[start_description_idx:end_description_idx].strip(
         )
-
+        print(action_text)
+        print()
         return action_text
 
     def get_statement(self, discussion_log):
@@ -251,21 +254,13 @@ class Player():
 
     def get_gpt3_vote(self, vote_prompt):
 
-        # chat = True
-        # if chat:
-        #     chat_prompt = "You must respond with a single integer. The integer corresponds to the player in the numbered list that you would like to vote to banish. You must vote for a single player, and you can only do so by responding with a single integer. Thank you."
-        #     vote = self.gpt3.get_logprobs(self.story + vote_prompt + chat_prompt, max_tokens=1)
-        #     return vote
+        vote_dict = self.extract_list_items(vote_prompt)
         
         # Get GPT3's most likely responses
-        logprobs = self.gpt3.get_logprobs(
-            self.story + vote_prompt, max_tokens=1
+        option_probs = self.gpt3.get_probs(
+            self.story + vote_prompt, vote_dict
         )
 
-        # Only accept valid integer voting options
-        option_nums = re.findall("[0-9]", vote_prompt)
-        option_probs = {num: logprobs.get(
-            num, float('-inf')) for num in option_nums}
         top_option = max(option_probs, key=option_probs.get)
 
         print('option probs')
@@ -275,6 +270,9 @@ class Player():
         return top_option
 
     def decode_vote(self, vote_prompt, vote_int):
+        print('decode vote')
+        print(vote_prompt)
+        print(vote_int)
         # Build a dictionary mapping vote numbers to player names
         voting_options = dict()
         option_nums = re.findall("[0-9]", vote_prompt)
@@ -289,7 +287,7 @@ class Player():
         print(voting_options)
 
         # Return the name that was voted for
-        return voting_options[vote_int]
+        return voting_options[str(vote_int)]
 
     def finalize_eval(self, killer_name):
         """
