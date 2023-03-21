@@ -25,9 +25,6 @@ class GPT3():
         return self.tokenizer(prompt)['input_ids']
 
     def generate(self, prompt, max_tokens, model, stop_tokens):
-        # # Crude rate limiting
-        # time.sleep(2)
-
         # Ensure prompt is below 1024 tokens
         prompt = self.trim_prompt(prompt)
         
@@ -57,7 +54,7 @@ class GPT3():
         response = response.replace('\n', '')
         return response
 
-    def get_probs(self, prompt, action_dict, max_tokens=10, iters=1):
+    def get_probs(self, prompt, action_dict, max_tokens=1, iters=1):
 
         prompt = self.trim_prompt(prompt)
         votes = {k: 0 for k in action_dict.keys()}
