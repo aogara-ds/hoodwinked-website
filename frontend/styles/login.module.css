@@ -7,7 +7,7 @@
     background-color: black;
     color: white;
     font-family: 'Courier New', monospace;
-    width: 25%;
+    width: 30%;
     padding: 2.5%;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     z-index: 999;
@@ -36,6 +36,19 @@
     width: 75%;
 }
 
+.login disclaimer {
+    display: block; 
+    text-align: center;
+    font-size: 14px;
+    padding-left: 20px;
+    padding-right: 20px;
+    color: #b7b7b7;
+}
+
+.login a {
+    color: #b7b7b7;
+}
+
 /* Style the submit button */
 .login button {
     color: white;
@@ -44,6 +57,8 @@
     font-size: 1em;
     border: 0;
     padding: 10px;
+    padding-right: 0px;
+    text-align: right;
     cursor: pointer;
     text-decoration: underline;
     display: table-cell;
