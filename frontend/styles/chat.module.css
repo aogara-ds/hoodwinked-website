@@ -16,10 +16,11 @@
     flex-direction: column;
     overflow-y: scroll;
     position: absolute;
-    left: 12.5%;
+    left: 10%;
     top: 30px;
     width: 70%;
     height: 77.5%;  
+    padding: 2.5%;
 }
 
 .history p {
@@ -73,8 +74,8 @@
 .message-block {
     background-color: #1e1e1e;
     padding: 0.5rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.15s ease-in-out;
+    /* border-radius: 0.5rem; */
+    transition: background-color 0s ease-in-out;
 }
 
 .message-block:hover {
