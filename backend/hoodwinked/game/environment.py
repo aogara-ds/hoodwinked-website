@@ -5,6 +5,7 @@ from .gpt3 import GPT3
 import random
 from django.http import JsonResponse, StreamingHttpResponse
 import threading
+from ..api.models import GameStatistics
 
 
 class Game():
@@ -481,14 +482,17 @@ class Game():
         for player in self.players:
             player.finalize_eval(killer_name = self.get_killer().name)
 
-            print()
+            # Print evaluation dicts, minus the story
             print({k:v for k,v in player.eval.items() if k!='story'})
 
             # Print the story for any cli users
             if player.agent == "cli":
                 print(player.story)
         
-        # TODO: Store the evaluation dicts in the database
+            # Store the evaluation dicts in the database
+            db_results = GameStatistics(**player.eval)
+            db_results.save()
+
     
     async def finish_game(self):
         # Keep playing the game until it's finished

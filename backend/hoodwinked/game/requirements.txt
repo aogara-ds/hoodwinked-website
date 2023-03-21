@@ -1,3 +1,0 @@
-transformers
-openai
-matplotlib

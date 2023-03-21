@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import psycopg2
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -194,3 +195,15 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.hoodwinked.ai',
     'https://hoodwinked.vercel.app'
 ]
+
+# Database settings
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'hoodwinked_db',
+        'USER': 'user',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'dpg-cgcispndvk4htnvvcvp0-a.oregon-postgres.render.com',
+        'PORT': '5432',
+    }
+}
