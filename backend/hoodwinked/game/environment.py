@@ -587,7 +587,7 @@ class Game():
     def format_actions(self, actions):
         formatted_actions = ""
         for i, a in enumerate(actions):
-            formatted_actions += f"{i+1}. {a}\n"
+            formatted_actions += f"\n{i+1}. {a}"
         return formatted_actions
     
     def format_prompt(self, player, prompt, state_update=None):
@@ -632,9 +632,7 @@ class Game():
 
         action = """Current Location: {location}
         Other Players in {location}: {opponents_in_location}
-        Possible Actions:
-        {possible_actions}
-
+        Possible Actions:{possible_actions}\n
         Which action would you like to take?
         Your Action:\n"""
 
