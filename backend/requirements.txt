@@ -38,3 +38,4 @@ trio==0.22.0
 typing_extensions==4.5.0
 urllib3==1.26.14
 yarl==1.8.2
+psycopg2-binary==2.9.5
