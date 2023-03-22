@@ -49,9 +49,6 @@ export default function Chat() {
       const regex = `${"Possible Actions:"}[\\s\\S]*?${userAction}\\.\\s+(.*?)\\n`
       const actionName = gameState.history.match(regex)[1]
 
-      // 
-
-
       // Make API Request
       const response = await request(userAction, gameState.game_id, gameState.next_request)
 
@@ -245,7 +242,7 @@ export default function Chat() {
       const message_blocks = gameState.history.split("\n\n").filter((block) => block !== "");
       return message_blocks.map((block, index) => {
         const paragraphs = block.split("\n").filter((paragraph) => paragraph !== "");
-        const listRegex = /^\d+\./;
+        const listRegex = /^\d+\.\s/;
         return (
           <div key={index} className={styles["message-block"]}>
             {paragraphs.map((paragraph, index) => {
@@ -287,8 +284,4 @@ export default function Chat() {
   );
 }
 
-// Second API call: HandleSubmit should call the API
-// TODO: Don't accept Enter or Send when gameState.loading is true
 // TODO: Animated loading ellipsis
-// TODO: Spacing between single \n lines
-// TODO: Focus on input box after Login
