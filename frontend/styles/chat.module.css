@@ -143,7 +143,22 @@
 
 @media only screen and (max-width: 1290px) {
     .window {
-      height: 100% - 20vw;
-      top: 20vw;
+        height: calc(100vh - 20vw);
+        top: 20vw;
     }
-  }
+
+    .history {
+        left: 2.5%;
+        width: 90%;
+        height: calc(90vh - 20vw); /* subtract 20vw to account for the space taken by .window */
+        padding: 2.5%;
+    }
+
+    .input {
+        padding: 2.5%;
+        left: 2.5%;
+        top: calc(95vh - 20vw - 5%); /* subtract 20vw and 5% to account for the space taken by .window and .history */
+        height: 5%;
+        width: 90%;
+    }
+}
