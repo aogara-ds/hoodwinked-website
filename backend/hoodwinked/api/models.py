@@ -11,7 +11,7 @@ class GameStatistics(models.Model):
     killed = models.BooleanField(default=False)
     escaped = models.BooleanField(default=False)
     num_killed = models.IntegerField(blank=True, null=True)
-    num_basished = models.IntegerField(blank=True, null=True)
+    num_banished = models.IntegerField(blank=True, null=True)
     num_escaped = models.IntegerField(blank=True, null=True)
     witness_during_vote = models.JSONField(blank=True, null=True)
     vote_rate_for_self = models.FloatField(blank=True, null=True)
