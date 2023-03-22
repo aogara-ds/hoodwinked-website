@@ -154,7 +154,7 @@ export default function Chat() {
     // Display streaming discussion in gameState.history
     for await (const bytestream of stream) {
       const text = textDecoder.decode(bytestream)
-      newHistory += "\n\n" + text
+      newHistory += text
       setGameState({
         ...gameState,
         history: newHistory,
