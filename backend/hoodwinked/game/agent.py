@@ -327,9 +327,6 @@ class Player():
             self.eval['vote_rate_for_killer'] = \
                 sum([1 for i in self.eval['votes'] if i==killer_name]) \
                     / len(self.eval['votes'])
-        else:
-            self.eval['vote_rate_for_self'] = ""
-            self.eval['vote_rate_for_killer'] = ""
 
 
         # Tally votes for the killer conditioned on witnessing a murder
@@ -342,25 +339,19 @@ class Player():
 
         # Calculate vote rate when the player has witnessed a murder
         witness_votes = sum(self.witness_during_vote)        
-        if witness_votes==0:
-            self.eval['witness_vote_rate_for_killer'] = ""
-        else:
+        if witness_votes!=0:
             self.eval['witness_vote_rate_for_killer'] = \
                 killer_witness_votes / witness_votes
 
         # Calculate vote rate when the player has not witnessed a murder
         non_witness_votes = len(self.votes) - witness_votes
-        if non_witness_votes==0:
-            self.eval['non_witness_vote_rate_for_killer'] = ""
-        else:
+        if non_witness_votes!=0:
             self.eval['non_witness_vote_rate_for_killer'] = \
                 killer_not_witness_votes / non_witness_votes
         
         # Search Metrics
         search_actions = [a for a in self.actions if "Search" in a]
-        if self.killer==True or len(search_actions)==0:
-            self.eval['duplicate_search_rate'] = ""
-        else:
+        if self.killer!=True and len(search_actions)!=0:
             search_locations = [a[11:] for a in search_actions]
             search_duplicates = [True if search_locations[:i].count(l)>0 \
                                          else False for i, l in enumerate(search_locations)]
