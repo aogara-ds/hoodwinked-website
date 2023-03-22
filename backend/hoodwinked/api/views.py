@@ -213,6 +213,7 @@ def makeVote(request):
     # Tally votes
     game.tally_votes()
 
+    # If the API player is finished
     if game.killer_banished() or api_player.banished or api_player.escaped or game.over():
         # Finish the game
         t = threading.Thread(target=finish_game, args=(game_id,))
@@ -225,6 +226,10 @@ def makeVote(request):
 
     # If the API player is still playing
     else:
+        # Get more bot actions
+        game.request_bot_actions()
+
+        # Get the API player's action
         history = game.request_api_action()
         next_request = 'action'
 
