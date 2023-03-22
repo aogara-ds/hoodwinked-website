@@ -141,7 +141,7 @@ class Player():
             list_items[num] = content
         return list_items
 
-    def get_gpt3_action(self, action_prompt, max=False):
+    def get_gpt3_action(self, action_prompt, argmax=False):
         print('get_gpt3_action()')
 
         action_dict = self.extract_list_items(action_prompt)
@@ -151,7 +151,7 @@ class Player():
             self.story + action_prompt, action_dict
         )
 
-        if max == True:
+        if argmax == True:
             vote = max(option_probs, key=option_probs.get)
         else:
             try:
@@ -252,7 +252,7 @@ class Player():
         print(vote_prompt)
         return input()
 
-    def get_gpt3_vote(self, vote_prompt, max=False):
+    def get_gpt3_vote(self, vote_prompt, argmax=False):
 
         vote_dict = self.extract_list_items(vote_prompt)
         
@@ -261,7 +261,7 @@ class Player():
             self.story + vote_prompt, vote_dict
         )
 
-        if max == True:
+        if argmax == True:
             vote = max(option_probs, key=option_probs.get)
         else:
             try:
@@ -276,8 +276,6 @@ class Player():
             except: 
                 print('broke here')
                 vote = random.choice(option_probs.keys())
-
-        vote = max(option_probs, key=option_probs.get)
 
         print('option probs')
         print(option_probs)
