@@ -182,7 +182,7 @@ export default function Chat() {
 
   // Display message for invalid inputs
   const invalidInput = () => {
-    const error_message = "Sorry, that's not a valid action. Please enter a number from the list above."
+    const error_message = "Sorry, that's not a valid action. Please enter a number from the list above.\n\n"
     setGameState({
       ...gameState,
       history: gameState.history + "\n\n" + error_message,
