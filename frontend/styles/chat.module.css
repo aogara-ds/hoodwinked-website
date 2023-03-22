@@ -150,14 +150,14 @@
     .history {
         left: 2.5%;
         width: 90%;
-        height: calc(90% - 20vw); /* subtract 20vw to account for the space taken by .window */
+        height: 85%; 
         padding: 2.5%;
     }
 
     .input {
         padding: 2.5%;
         left: 2.5%;
-        top: calc(95% - 20vw - 5%); /* subtract 20vw and 5% to account for the space taken by .window and .history */
+        top: 90%; 
         height: 5%;
         width: 90%;
     }
