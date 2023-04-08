@@ -54,12 +54,14 @@ class GPT3():
         response = response.replace('\n', '')
         return response
 
-    def get_probs(self, prompt, action_dict, max_tokens=1, n=1, max_iters=5):
+    def get_probs(self, prompt, option_dict, max_tokens=8, n=1, max_iters=5):
+
+        print("get_probs()")
 
         prompt = self.trim_prompt(prompt)
-        votes = {k: 0 for k in action_dict.keys()}
+        votes = {k: 0 for k in option_dict.keys()}
 
-        print(action_dict)
+        print("options", option_dict)
 
         iters = 0
         while sum(votes.values()) == 0:
@@ -70,20 +72,26 @@ class GPT3():
                 max_tokens=max_tokens,
                 n=n
             )
+            print("completions")
 
             for completion_dict in response['choices']:
                 completion = completion_dict['message']['content']
                 print(completion)
-                for num, action in action_dict.items():
+                for num, action in option_dict.items():
                     if (str(num) in completion) or (action in completion):
                         votes[num] += 1
 
             iters += 1
             if iters == max_iters:
-                votes = {k: 1 for k in action_dict.keys()}
+                votes = {k: 1 for k in option_dict.keys()}
         
-        prob_mass = sum(np.exp(list(votes.values())))
-        probs = {k: np.exp(v) / prob_mass for k, v in votes.items()}
+        # prob_mass = sum(np.exp(list(votes.values())))
+        # probs = {k: np.exp(v) / prob_mass for k, v in votes.items()}
+
+        prob_mass = sum(list(votes.values()))
+        probs = {k: v / prob_mass for k, v in votes.items()}
+
+        print("votes from get_probs", probs)
 
         return probs
     

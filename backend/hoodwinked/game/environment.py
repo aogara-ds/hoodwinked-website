@@ -629,7 +629,7 @@ class Game():
 
         rules = """Good evening, {player_name}. Welcome to the most terrifying night of your life.\n\n"""
 
-        identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them before they escape. 
+        identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
 
         Be careful to avoid suspicion. If someone sees you commit murder in the same room as them, they will tell the other players, and the group will vote to banish you. Tonight, deception is your friend.\n\n"""
 
