@@ -2,8 +2,8 @@ import os
 import sys
 import pandas as pd
 import time
-from environment import Game
-from agent import Player
+from game.environment import Game
+from game.agent import Player
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -31,7 +31,7 @@ def run_job(
 
             # Define the game
             discussion = discussion
-            game = Game(discussion=discussion, start_location=start_location)
+            game = Game(discussion=discussion)
 
             # Load the players into the game
             game.load_random_players(num_players, impostor_agent, innocent_agent)
@@ -64,17 +64,23 @@ def run_job(
                 sum([i if (type(i)!=str) else 0 for i in eval_dict['num_killed'][-num_players:]]) * 2 * num_players
             print(f'api_hits: {api_hits}')
 
+            if i % 10 == 0:
+                temp_save(eval_dict)
+
         # Catch errors and continue with the next game
         except Exception as e:
-            print(e)
-            temp_save = pd.DataFrame(eval_dict)
-            temp_save_path = get_save_path().replace(".csv", "_temp.csv")
-            temp_save.to_csv(temp_save_path)
-            print("sleeping for 60")
-            time.sleep(60)
+            print("Error: ", e.args)
+            temp_save(eval_dict)
+            time.sleep(30)
             continue
 
     return eval_dict
+
+
+def temp_save(eval_dict):
+    temp_save = pd.DataFrame(eval_dict)
+    temp_save_path = get_save_path().replace(".csv", "_temp.csv")
+    temp_save.to_csv(temp_save_path)
 
 
 def get_save_path():
@@ -89,7 +95,7 @@ def get_save_path():
 
 if __name__ == "__main__":
     # Read the schedule of jobs
-    schedule = pd.read_csv("jobs/schedule_11.csv")
+    schedule = pd.read_csv("jobs/schedule_6.csv")
     save_path = get_save_path()
     
     # Set up the evaluation structure

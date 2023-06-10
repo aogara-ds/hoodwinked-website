@@ -79,6 +79,7 @@ LOGGING = {
 }
 
 ALLOWED_HOSTS = [
+    '*',
     'hoodwinked.onrender.com'
 ]
 
@@ -130,16 +131,16 @@ WSGI_APPLICATION = 'settings.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'hoodwinked_db',
-        'USER': 'user',
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'dpg-cgcispndvk4htnvvcvp0-a.oregon-postgres.render.com',
-        'PORT': '5432',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'hoodwinked_db',
+#         'USER': 'user',
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': 'dpg-cgcispndvk4htnvvcvp0-a.oregon-postgres.render.com',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -189,14 +190,14 @@ HOODWINKED_GAMES = dict()
 # Create a list of game threads
 GAME_THREADS = []
 
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = [
-    'https://hoodwinked.ai', 
-    'https://www.hoodwinked.ai',
-    'https://hoodwinked.vercel.app'
-]
-CSRF_TRUSTED_ORIGINS = [
-    'https://hoodwinked.ai', 
-    'https://www.hoodwinked.ai',
-    'https://hoodwinked.vercel.app'
-]
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = [
+#     'https://hoodwinked.ai', 
+#     'https://www.hoodwinked.ai',
+#     'https://hoodwinked.vercel.app'
+# ]
+# CSRF_TRUSTED_ORIGINS = [
+#     'https://hoodwinked.ai', 
+#     'https://www.hoodwinked.ai',
+#     'https://hoodwinked.vercel.app'
+# ]

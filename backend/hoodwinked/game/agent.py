@@ -133,12 +133,16 @@ class Player():
         return int(random.choice(action_list))
     
     def extract_list_items(self, string):
-        pattern = r'(\d+)\.\s+(.*)'
-        list_items = {}
-        for match in re.finditer(pattern, string):
-            num = int(match.group(1))
-            content = match.group(2).strip()
-            list_items[num] = content
+        try:
+            pattern = r'(\d+)\.\s+(.*)'
+            list_items = {}
+            for match in re.finditer(pattern, string):
+                num = int(match.group(1))
+                content = match.group(2).strip()
+                list_items[num] = content
+        except:
+            print('error 1')
+            pdb.set_trace()
         return list_items
 
     def get_gpt3_action(self, action_prompt, argmax=False):
@@ -148,7 +152,7 @@ class Player():
 
         # Get GPT3's most likely responses
         option_probs = self.gpt3.get_probs(
-            self.story + action_prompt, action_dict
+            self.story + action_prompt, action_dict, self.model
         )
 
         if argmax == True:
@@ -169,7 +173,6 @@ class Player():
 
         # Return the most likely token among the valid voting options
         vote = int(vote)
-        print(vote)
         return vote
     
     def store_api_action(self, action_prompt, action_int):
@@ -186,14 +189,17 @@ class Player():
         print('decoding action')
         print(action_int)
         print(action_prompt)
-        
-        start_description_idx = action_prompt.find(str(action_int) + ". ") + 2
-        end_description_idx = action_prompt[start_description_idx:].find(
-            '\n') + start_description_idx
-        action_text = action_prompt[start_description_idx:end_description_idx].strip(
-        )
-        print(action_text)
-        print()
+        try:
+            start_description_idx = action_prompt.find(str(action_int) + ". ") + 2
+            end_description_idx = action_prompt[start_description_idx:].find(
+                '\n') + start_description_idx
+            action_text = action_prompt[start_description_idx:end_description_idx].strip(
+            )
+            print(action_text)
+            print()
+        except:
+            print('error 2')
+            pdb.set_trace()
         return action_text
 
     def get_statement(self, discussion_log):
@@ -258,7 +264,7 @@ class Player():
         
         # Get GPT3's most likely responses
         option_probs = self.gpt3.get_probs(
-            self.story + vote_prompt, vote_dict
+            self.story + vote_prompt, vote_dict, self.model
         )
 
         if argmax == True:

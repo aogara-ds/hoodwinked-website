@@ -5,11 +5,11 @@ from .gpt3 import GPT3
 import random
 from django.http import JsonResponse, StreamingHttpResponse
 import threading
-from ..api.models import GameStatistics
+# from ..api.models import GameStatistics
 
 
 class Game():
-    def __init__(self, discussion = True, start_location = "random"):
+    def __init__(self, discussion = True):
         print("Initialized game.")
         self.discussion = discussion
         self.prompts = self.load_prompts()
@@ -75,15 +75,13 @@ class Game():
                 players.append(Player(
                     name=player_names[i],
                     killer=True,
-                    agent=impostor_agent,
-                    start_location = self.start_location
+                    agent=impostor_agent
                 ))
             else:
                  players.append(Player(
                     name=player_names[i],
                     killer=False,
-                    agent=innocent_agent,
-                    start_location = self.start_location
+                    agent=innocent_agent
                 ))               
 
         # Finish loading players into the game with standard function
@@ -490,8 +488,8 @@ class Game():
                 print(player.story)
         
             # Store the evaluation dicts in the database
-            db_results = GameStatistics(**player.eval)
-            db_results.save()
+            # db_results = GameStatistics(**player.eval)
+            # db_results.save()
 
     
     async def finish_game(self):
@@ -641,7 +639,7 @@ class Game():
         Current Location: {location}
         Other Players in {location}: {opponents_in_location}
         Possible Actions:{possible_actions}\n
-        Which action would you like to take?
+        Which action would you like to take? Respond with a number from the list.
         Your Action:\n"""
 
         turn = """Turn #{turn_num}
@@ -649,9 +647,9 @@ class Game():
         Other Players in {location}: {opponents_in_location}
         Your Action: {turn_action}\n\n{state_update}"""
 
-        discussion = """{killed_player} was killed! Who do you think the killer is?\n"""
+        discussion = """{killed_player} was killed! Now the group will have a discussion about who they think the killer is. What would you like to say?\n"""
 
-        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish?\n"
+        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish? Respond with a number from the list.\n"
 
         vote_summary = "\nHere are the votes:\n"
 
