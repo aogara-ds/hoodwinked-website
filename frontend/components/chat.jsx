@@ -226,7 +226,7 @@ export default function Chat() {
   };
 
   // Scroll to the bottom of the chat history
-  useEffect(() => {
+  useEffect(() => { 
     const history = chatHistoryRef.current;
     history.scrollTop = history.scrollHeight;
   });
@@ -277,7 +277,7 @@ export default function Chat() {
           onChange={(e) => setUserInput(e.target.value)}
         />
         <button type="submit" onClick={handleSubmit} disabled={loading}>
-          send
+          {loading ? 'loading...' : 'send'}
         </button>
       </div>
     </div>
