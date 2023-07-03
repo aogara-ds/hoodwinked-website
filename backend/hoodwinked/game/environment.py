@@ -511,8 +511,7 @@ class Game():
         Everyone is either killed, banished, or escaped.
         Killed: {killed_num}
         Escaped: {escaped_num}
-        Banished: {banished_num}
-        Your score for this game is {killer_score}."""
+        Banished: {banished_num}"""
 
     def killer_banished(self):
         return self.players[self.killer_id].banished
@@ -622,7 +621,7 @@ class Game():
             print(player.story)
             print()
 
-    def load_prompts(self):
+def load_prompts(self):
         """
         Returns a dictionary of the main prompts used by the game.
         """
@@ -641,7 +640,7 @@ class Game():
         Current Location: {location}
         Other Players in {location}: {opponents_in_location}
         Possible Actions:{possible_actions}\n
-        Which action would you like to take?
+        Which action would you like to take? Respond with a number from the list.
         Your Action:\n"""
 
         turn = """Turn #{turn_num}
@@ -649,9 +648,9 @@ class Game():
         Other Players in {location}: {opponents_in_location}
         Your Action: {turn_action}\n\n{state_update}"""
 
-        discussion = """{killed_player} was killed! Who do you think the killer is?\n"""
+        discussion = """{killed_player} was killed! Now the group will have a discussion about who they think the killer is. What would you like to say?\n"""
 
-        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish?\n"
+        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish? Respond with a number from the list.\n"
 
         vote_summary = "\nHere are the votes:\n"
 
@@ -679,3 +678,4 @@ class Game():
         }
 
         return prompts
+
