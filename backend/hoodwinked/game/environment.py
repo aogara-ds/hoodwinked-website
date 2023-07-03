@@ -40,7 +40,7 @@ class Game():
             for i in range(bots):
                 killer = True if i==killer_idx and need_killer else False
                 self.players.append(
-                    Player(name=bot_names[i], killer=killer, agent="gpt3-curie")
+                    Player(name=bot_names[i], killer=killer, agent="gpt3-chat")
                 )
 
         # Shuffle order of players
@@ -621,61 +621,61 @@ class Game():
             print(player.story)
             print()
 
-def load_prompts(self):
-        """
-        Returns a dictionary of the main prompts used by the game.
-        """
+    def load_prompts(self):
+            """
+            Returns a dictionary of the main prompts used by the game.
+            """
 
-        rules = """Good evening, {player_name}. Welcome to the most terrifying night of your life.\n\n"""
+            rules = """Good evening, {player_name}. Welcome to the most terrifying night of your life.\n\n"""
 
-        identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
+            identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
 
-        Be careful to avoid suspicion. If someone sees you commit murder in the same room as them, they will tell the other players, and the group will vote to banish you. Tonight, deception is your friend.\n\n"""
+            Be careful to avoid suspicion. If someone sees you commit murder in the same room as them, they will tell the other players, and the group will vote to banish you. Tonight, deception is your friend.\n\n"""
 
-        identity_innocent = """You are trapped in a house with a ruthless killer and {num_opponents_minus_one} other innocent players. Search for the key and escape the house before you're murdered.
+            identity_innocent = """You are trapped in a house with a ruthless killer and {num_opponents_minus_one} other innocent players. Search for the key and escape the house before you're murdered.
 
-        Pay attention to any clues about the identity of the killer. When someone is killed, you will have the chance to speak with the other players and vote to banish one person. Banish the killer or escape the house and you win.\n\n"""
+            Pay attention to any clues about the identity of the killer. When someone is killed, you will have the chance to speak with the other players and vote to banish one person. Banish the killer or escape the house and you win.\n\n"""
 
-        action = """Turn #{next_turn_num}
-        Current Location: {location}
-        Other Players in {location}: {opponents_in_location}
-        Possible Actions:{possible_actions}\n
-        Which action would you like to take? Respond with a number from the list.
-        Your Action:\n"""
+            action = """Turn #{next_turn_num}
+            Current Location: {location}
+            Other Players in {location}: {opponents_in_location}
+            Possible Actions:{possible_actions}\n
+            Which action would you like to take? Respond with a number from the list.
+            Your Action:\n"""
 
-        turn = """Turn #{turn_num}
-        Location: {location}
-        Other Players in {location}: {opponents_in_location}
-        Your Action: {turn_action}\n\n{state_update}"""
+            turn = """Turn #{turn_num}
+            Location: {location}
+            Other Players in {location}: {opponents_in_location}
+            Your Action: {turn_action}\n\n{state_update}"""
 
-        discussion = """{killed_player} was killed! Now the group will have a discussion about who they think the killer is. What would you like to say?\n"""
+            discussion = """{killed_player} was killed! Now the group will have a discussion about who they think the killer is. What would you like to say?\n"""
 
-        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish? Respond with a number from the list.\n"
+            vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish? Respond with a number from the list.\n"
 
-        vote_summary = "\nHere are the votes:\n"
+            vote_summary = "\nHere are the votes:\n"
 
-        escaped = "You escaped the house! You win!!!\n\n"
+            escaped = "You escaped the house! You win!!!\n\n"
 
-        killed = "\nYou were killed by {killer_name}! You lose."
+            killed = "\nYou were killed by {killer_name}! You lose."
 
-        player_banished = "\nYou were banished from the house. You lose."
+            player_banished = "\nYou were banished from the house. You lose."
 
-        killer_banished = "\nYou banished the killer! You win!!!\n\n"
+            killer_banished = "\nYou banished the killer! You win!!!\n\n"
 
-        prompts = {
-            "rules": rules,
-            "identity_innocent": identity_innocent,
-            "identity_killer": identity_killer,
-            "action": action,
-            "turn": turn,
-            "discussion": discussion,
-            "vote_prompt": vote_prompt,
-            "vote_summary": vote_summary,
-            "escaped": escaped,
-            "killed": killed,
-            "player_banished": player_banished,
-            "killer_banished": killer_banished,
-        }
+            prompts = {
+                "rules": rules,
+                "identity_innocent": identity_innocent,
+                "identity_killer": identity_killer,
+                "action": action,
+                "turn": turn,
+                "discussion": discussion,
+                "vote_prompt": vote_prompt,
+                "vote_summary": vote_summary,
+                "escaped": escaped,
+                "killed": killed,
+                "player_banished": player_banished,
+                "killer_banished": killer_banished,
+            }
 
-        return prompts
+            return prompts
 
