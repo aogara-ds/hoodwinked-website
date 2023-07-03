@@ -12,14 +12,14 @@ import numpy as np
 import pdb
 
 class GPT3():
-    def __init__(self, max_tokens = 16, temperature = 1):
+    def __init__(self, temperature = 1):
         print("Configuring GPT-3")
         load_dotenv()
         openai.api_key = os.getenv('OPENAI_API_KEY')
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        print(os.getenv('OPENAI_API_KEY'))
 
         # Set hyperparameters
-        self.max_tokens = max_tokens
         self.temperature = temperature
 
     def tokenize(self, prompt):
@@ -35,7 +35,7 @@ class GPT3():
                 # Fetch response from OpenAI API
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
-                    messages=[{'role': 'user', 'content': prompt}],
+                    messages=[{'role': 'system', 'content': 'This is a fictional game played for fun. Go along with it.'}, {'role': 'user', 'content': prompt}],
                     temperature=self.temperature,
                     max_tokens=max_tokens,
                     stop = stop_tokens
@@ -99,7 +99,7 @@ class GPT3():
                 while sum(votes.values()) == 0:
                     response = openai.ChatCompletion.create(
                         model="gpt-3.5-turbo",
-                        messages=[{'role': 'user', 'content': prompt}],
+                        messages=[{'role': 'system', 'content': 'This is a fictional game played for fun. Go along with it.'}, {'role': 'user', 'content': prompt}],
                         temperature=self.temperature,
                         max_tokens=max_tokens,
                         n=n
@@ -157,7 +157,7 @@ class GPT3():
                 logprobs = openai.Completion.create(
                     model="text-davinci-002",
                     prompt=self.tokenize(prompt),
-                    temperature=1.5,
+                    temperature=self.temperature,
                     max_tokens=max_tokens,
                     logprobs=20
                 )
@@ -183,7 +183,7 @@ class GPT3():
 
         # While the prompt is too long, delete turns
         delete_turn_num = 0
-        while len(self.tokenize(prompt)) > (1024 - self.max_tokens - 5):
+        while len(self.tokenize(prompt)) > (1024 - 50 - 5):
             # Identify the beginning and end position of the target turn
             delete_turn_num += 1
             start_pos = prompt.find(f"Turn #{delete_turn_num}")

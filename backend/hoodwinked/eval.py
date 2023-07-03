@@ -95,7 +95,7 @@ def get_save_path():
 
 if __name__ == "__main__":
     # Read the schedule of jobs
-    schedule = pd.read_csv("jobs/schedule_6.csv")
+    schedule = pd.read_csv("jobs/schedule_12.csv")
     save_path = get_save_path()
     
     # Set up the evaluation structure
