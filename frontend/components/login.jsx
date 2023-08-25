@@ -43,7 +43,7 @@ export default function Login(props) {
           <button type="submit">submit</button>
         </form>
         <disclaimer>
-          Anonymous data from your gameplay will be stored and analyzed in <a href="https://docs.google.com/document/d/1671h6NG9CpXYWrccapQBlAyPl99Qsjyl6eeslyoLlnI/edit?usp=sharing">our research paper</a>.
+          Anonymous data from your gameplay will be stored and analyzed in <a href="https://arxiv.org/abs/2308.01404">our research paper</a>.
         </disclaimer>
       </div>
     </div>
