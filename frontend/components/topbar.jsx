@@ -15,9 +15,9 @@ function Topbar() {
         </div>
       </div>
       <div className={styles.links}>
-      <a href="https://docs.google.com/document/d/1671h6NG9CpXYWrccapQBlAyPl99Qsjyl6eeslyoLlnI/edit?usp=sharing">about</a>
+      <a href="https://arxiv.org/abs/2308.01404">about</a>
         <a href="https://github.com/aogara-ds/hoodwinked">github</a>
-        <a href="mailto:aidanogara623@gmail.com">contact</a>
+        <a href="https://www.linkedin.com/in/abogara/">contact</a>
       </div>
     </div>
   );
