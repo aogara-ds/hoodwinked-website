@@ -18,7 +18,7 @@ function Sidebar() {
         <p className={styles.option}>
           <a href="https://github.com/aogara-ds/hoodwinked">github</a>
         </p>
-        <p className={styles.option}><a href="mailto:aidanogara623@gmail.com">contact</a></p>
+        <p className={styles.option}><a href="https://www.linkedin.com/in/abogara/">contact</a></p>
       </div>
     </div>
   );
