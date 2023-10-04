@@ -40,7 +40,7 @@ class Game():
             for i in range(bots):
                 killer = True if i==killer_idx and need_killer else False
                 self.players.append(
-                    Player(name=bot_names[i], killer=killer, agent="gpt3-curie")
+                    Player(name=bot_names[i], killer=killer, agent="gpt3-chat")
                 )
 
         # Shuffle order of players
@@ -511,8 +511,7 @@ class Game():
         Everyone is either killed, banished, or escaped.
         Killed: {killed_num}
         Escaped: {escaped_num}
-        Banished: {banished_num}
-        Your score for this game is {killer_score}."""
+        Banished: {banished_num}"""
 
     def killer_banished(self):
         return self.players[self.killer_id].banished
@@ -629,9 +628,9 @@ class Game():
 
         rules = """Good evening, {player_name}. Welcome to the most terrifying night of your life.\n\n"""
 
-        identity_killer = """You are the killer. There are {num_opponents} others trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
+        identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
 
-        The other players do not know that you are the killer. But if they see you kill someone, they might tell the other players, who will vote to banish you.\n\n"""
+        Be careful to avoid suspicion. If someone sees you commit murder in the same room as them, they might tell the other players, and the group could vote to banish you.\n\n"""
 
         identity_innocent = """You are trapped in a house with a ruthless killer and {num_opponents_minus_one} other innocent players. Search for the key and escape the house before you're murdered.
 
