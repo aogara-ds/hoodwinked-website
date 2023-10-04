@@ -139,7 +139,7 @@ Maybe after the discussion this gets fixed!
       console.log(gameState.next_request)
 
       // Convert integer to player name
-      const regex = `${"Who do you vote to banish?"}[\\s\\S]*?${userVote}\\.\\s+(.*?)\\n`
+      const regex = new RegExp(`${"Who do you vote to banish?"}(?:[\\s\\S]*?${"Who do you vote to banish?"})*[\\s\\S]*?${userVote}\\.\\s+(.*?)\\n`);
       const playerName = gameState.history.match(regex)[1]
 
       console.log(userVote)
