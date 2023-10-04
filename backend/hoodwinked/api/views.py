@@ -9,7 +9,6 @@ import time
 import json
 import pdb
 
-
 def startGame(request, bots=5):
     """
     Begins a new game of Hoodwinked by:
@@ -195,6 +194,8 @@ def makeVote(request):
     request_dict = read_request(request)
     game_id = request_dict['game_id']
     vote = request_dict['input']
+
+    print(f"From views.py in makeVote(), we have vote = {vote}")
 
     # Fetch stored game
     game = settings.HOODWINKED_GAMES[game_id]

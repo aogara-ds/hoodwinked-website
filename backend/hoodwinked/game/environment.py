@@ -629,9 +629,9 @@ class Game():
 
         rules = """Good evening, {player_name}. Welcome to the most terrifying night of your life.\n\n"""
 
-        identity_killer = """You are the killer. There are {num_opponents} other players trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
+        identity_killer = """You are the killer. There are {num_opponents} others trapped in this house with you. They are looking for a key to escape the house. You must kill them all before they escape. 
 
-        Be careful to avoid suspicion. If someone sees you commit murder in the same room as them, they will tell the other players, and the group will vote to banish you. Tonight, deception is your friend.\n\n"""
+        The other players do not know that you are the killer. But if they see you kill someone, they might tell the other players, who will vote to banish you.\n\n"""
 
         identity_innocent = """You are trapped in a house with a ruthless killer and {num_opponents_minus_one} other innocent players. Search for the key and escape the house before you're murdered.
 
@@ -641,7 +641,7 @@ class Game():
         Current Location: {location}
         Other Players in {location}: {opponents_in_location}
         Possible Actions:{possible_actions}\n
-        Which action would you like to take?
+        Which action would you like to take? Respond with a number from the list.
         Your Action:\n"""
 
         turn = """Turn #{turn_num}
@@ -649,9 +649,9 @@ class Game():
         Other Players in {location}: {opponents_in_location}
         Your Action: {turn_action}\n\n{state_update}"""
 
-        discussion = """{killed_player} was killed! Who do you think the killer is?\n"""
+        discussion = """{killed_player} was killed! Now the group will have a discussion about who they think the killer is. What would you like to say?\n"""
 
-        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish?\n"
+        vote_prompt = "Now everyone will vote to banish one player. Who do you vote to banish? Respond with a number from the list.\n"
 
         vote_summary = "\nHere are the votes:\n"
 

@@ -1,5 +1,8 @@
 export default async function request(input, game_id, api) {
-  const startGameURL = "https://hoodwinked.onrender.com/" + api + "/";
+  // TODO RUN LOCAL: Comment this out
+  // const startGameURL = "https://hoodwinked.onrender.com/" + api + "/";
+  const startGameURL = "http://127.0.0.1:8000/" + api + "/";
+
   try {
     const response = await fetch(startGameURL, {
       method: "POST",
@@ -8,9 +11,13 @@ export default async function request(input, game_id, api) {
           game_id: game_id,
       }),
     });
+
+    if (!response.ok) {
+      return { error: "Sorry, the backend server timed out! Please refresh and play again." };
+    }
+
     return response;
   } catch (err) {
-    // TODO: Handle error
-    console.error(err);
+    console.error("Sorry, the backend server timed out! Please refresh and play again.");
   }
 }

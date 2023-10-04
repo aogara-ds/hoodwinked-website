@@ -25,21 +25,23 @@ export default function Chat() {
     return integers
   }
 
+/*
+gameState.history is a long string, continually updated
+it's split by /n/n and shown as blocks
+Why don't the lists go away when you kill someone? 
+Probably because streaming message
+Maybe after the discussion this gets fixed!
+
+
+
+*/
+
   const handleAction = async () => {  
     console.log('handleAction')
     
     // Parse userAction
     const userAction = parseInt(userInput)
     const possibleActions = await getIntegers(gameState.history, "Possible Actions:")
-
-    // TODO: Show it in the expected spot
-    // This will get overwritten by the next response, how do I do it right?
-    // Maybe wait for the API to return the action.
-    // var newHistory = gameState.history + userAction.toString()
-    // await setGameState({
-    //   ...gameState,
-    //   history: newHistory,
-    // })
 
     // If userInput is a valid action, send it to the API and store response
     if (possibleActions.includes(userAction)) {
@@ -49,8 +51,22 @@ export default function Chat() {
       const regex = `${"Possible Actions:"}[\\s\\S]*?${userAction}\\.\\s+(.*?)\\n`
       const actionName = gameState.history.match(regex)[1]
 
+      // Update gameState.history to include the user's action
+      const lastActionIndex = gameState.history.lastIndexOf("Your Action:");
+      if (lastActionIndex !== -1) {
+        const newHistory = gameState.history.substring(0, lastActionIndex) + "Your Action: " + actionName + "\n";
+        await setGameState({
+          ...gameState,
+          history: newHistory,
+        });
+      }
+
       // Make API Request
       const response = await request(userAction, gameState.game_id, gameState.next_request)
+      if (response.error) {
+        setGameState({ ...gameState, errorMessage: response.error });
+        return;
+      }
 
       // Handle JSON response
       if (response.headers.get('Content-Type') == "application/json") {
@@ -60,10 +76,10 @@ export default function Chat() {
         console.log(newGameState.history)
 
         await setGameState({
-          ...gameState, 
+          ...gameState,
           ...newGameState,
-        })
-
+        });
+      
         // Allow the user to type again
         setLoading(false);
       } 
@@ -92,6 +108,10 @@ export default function Chat() {
 
     // Make API Request
     const response = await request(userStatement, gameState.game_id, gameState.next_request)
+    if (response.error) {
+      setGameState({ ...gameState, errorMessage: response.error });
+      return;
+    }
 
     // Handle response
     handleStream(response, newHistory)
@@ -105,7 +125,8 @@ export default function Chat() {
     const possibleVotes = await getIntegers(gameState.history, "Who do you vote to banish?")
 
     // Remove the vote question from gameState.history, no replacement
-    const vote_question = gameState.history.split("\n\n")[-1]
+    const historyArray = gameState.history.split("\n\n")
+    const vote_question = historyArray[historyArray.length - 1]
     var newHistory = gameState.history.replace(vote_question, "")
     setGameState({
       ...gameState,
@@ -126,7 +147,10 @@ export default function Chat() {
 
       // Make API Request
       const response = await request(playerName, gameState.game_id, gameState.next_request)
-
+      if (response.error) {
+        setGameState({ ...gameState, errorMessage: response.error });
+        return;
+      }
 
       // Handle JSON response
       const newGameState = await response.json()
@@ -142,10 +166,8 @@ export default function Chat() {
   }
 
   // Display streaming responses in gameState.history
-  // TODO: Store in another file, access history via context
   const handleStream = async (response, newHistory) => {
     console.log('handleStream()')
-    console.log('next_')
 
     // Initialize streaming variables
     const stream = readStream(response);
@@ -205,7 +227,6 @@ export default function Chat() {
     // Disable the chat input
     setLoading(true);
 
-    console.log('before choosing handler?')
     console.log(gameState.next_request)
 
     // Handle submission based on expected next_request
@@ -237,7 +258,6 @@ export default function Chat() {
   }, [gameState]);
 
   const displayHistory = () => {
-    console.log(gameState.history);
     if (gameState.history) {
       const message_blocks = gameState.history.split("\n\n").filter((block) => block !== "");
       return message_blocks.map((block, index) => {
@@ -260,8 +280,15 @@ export default function Chat() {
   return (
     <div className={styles.window}>
       <div ref={chatHistoryRef} className={styles.history}>
-        {displayHistory()}
+        {gameState.errorMessage ? (
+          <div className="error-message">{gameState.errorMessage}</div>
+        ) : (
+          displayHistory()
+        )}
       </div>
+      {/* <div ref={chatHistoryRef} className={styles.history}>
+        {displayHistory()}
+      </div> */}
       <div className={styles.input}>
         <textarea
           readOnly={loading}
