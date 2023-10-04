@@ -1,7 +1,7 @@
 export default async function fetchStartGame(playerName, killer) {
   // TODO RUN LOCAL: Comment this out
-  // const startGameURL = "https://hoodwinked.onrender.com/start/";
-  const startGameURL = "http://127.0.0.1:8000/start/";
+  const startGameURL = "https://hoodwinked.onrender.com/start/";
+  // const startGameURL = "http://127.0.0.1:8000/start/";
 
   try {
     const response = await fetch(startGameURL, {

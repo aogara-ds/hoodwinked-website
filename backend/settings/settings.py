@@ -81,7 +81,7 @@ LOGGING = {
 ALLOWED_HOSTS = [
     'hoodwinked.onrender.com',
     # TODO RUN LOCAL: comment this out
-    '127.0.0.1'
+    # '127.0.0.1'
 ]
 
 
@@ -134,22 +134,22 @@ WSGI_APPLICATION = 'settings.wsgi.application'
 
 # TODO RUN LOCAL: Comment this out
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'hoodwinked_db',
-#         'USER': 'user',
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': 'dpg-cgcispndvk4htnvvcvp0-a.oregon-postgres.render.com',
-#         'PORT': '5432',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.dummy',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'hoodwinked_db',
+        'USER': 'user',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'dpg-cgcispndvk4htnvvcvp0-a.oregon-postgres.render.com',
+        'PORT': '5432',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.dummy',
+#     }
+# }
 
 
 # Password validation
@@ -201,15 +201,15 @@ GAME_THREADS = []
 
 
 # TODO RUN LOCAL: Switch CORS_ORIGIN_ALLOW_ALL to True and comment out the rest
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 
-# CORS_ORIGIN_WHITELIST = [
-#     'https://hoodwinked.ai', 
-#     'https://www.hoodwinked.ai',
-#     'https://hoodwinked.vercel.app'
-# ]
-# CSRF_TRUSTED_ORIGINS = [
-#     'https://hoodwinked.ai', 
-#     'https://www.hoodwinked.ai',
-#     'https://hoodwinked.vercel.app'
-# ]
+CORS_ORIGIN_WHITELIST = [
+    'https://hoodwinked.ai', 
+    'https://www.hoodwinked.ai',
+    'https://hoodwinked.vercel.app'
+]
+CSRF_TRUSTED_ORIGINS = [
+    'https://hoodwinked.ai', 
+    'https://www.hoodwinked.ai',
+    'https://hoodwinked.vercel.app'
+]

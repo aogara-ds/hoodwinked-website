@@ -1,7 +1,7 @@
 export default async function request(input, game_id, api) {
   // TODO RUN LOCAL: Comment this out
-  // const startGameURL = "https://hoodwinked.onrender.com/" + api + "/";
-  const startGameURL = "http://127.0.0.1:8000/" + api + "/";
+  const startGameURL = "https://hoodwinked.onrender.com/" + api + "/";
+  // const startGameURL = "http://127.0.0.1:8000/" + api + "/";
 
   try {
     const response = await fetch(startGameURL, {
